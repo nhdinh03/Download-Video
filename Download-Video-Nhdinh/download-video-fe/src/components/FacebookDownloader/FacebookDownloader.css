@@ -1,0 +1,317 @@
+/* Variables cho màu sắc và kích thước chung */
+:root {
+  --primary-color: #1877f3;
+  --primary-color-alt: #42a5f5;    /* màu xanh dương nhạt bổ trợ */
+  --success-color: #43a047;
+  --success-color-alt: #81c784;
+  --bg-main: #f6faff;             /* nền trang xanh nhạt */
+  --bg-card: #ffffff;             /* nền thẻ trắng */
+  --text-main: #1976d2;           /* màu chữ xanh đậm cho text nhấn */
+  --radius-large: 1.5rem;         /* bo góc lớn ~24px */
+  --radius-medium: 1rem;          /* bo góc trung bình ~16px */
+  --radius-small: 0.75rem;        /* bo góc nhỏ ~12px */
+}
+
+/* Reset body background to a flat color for performance */
+body {
+  background: var(--bg-main);
+  font-family: 'Inter', Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Container trung tâm cho nội dung chính */
+.main-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 82vh;
+}
+
+/* Card giao diện chính */
+.fb-downloader-root {
+  max-width: 700px;
+  min-width: 340px;
+  margin: 0 auto;
+  padding: 40px 32px 32px;
+  background: var(--bg-card);
+  border-radius: var(--radius-large);
+  /* Bóng đổ nhẹ tạo độ nổi khối tinh tế (giảm mạnh so với phiên bản cũ) */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  position: relative;
+}
+
+/* Trên màn hình nhỏ: thẻ gần full-width, padding và bo góc giảm */
+@media (max-width: 900px) {
+  .fb-downloader-root {
+    max-width: 95vw;
+    padding: 20px 4vw;
+    border-radius: var(--radius-medium);
+  }
+}
+
+/* Header của công cụ (icon Facebook + tiêu đề) */
+.fb-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 10px;
+}
+.fb-logo {
+  color: var(--primary-color);
+  font-size: 2.7rem;
+  margin-right: 6px;
+  /* Bỏ hiệu ứng drop-shadow để logo phẳng hơn, load nhanh */
+}
+.fb-title {
+  color: var(--primary-color);
+  font-weight: 900;
+  font-size: 2.2rem;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  /* Bỏ text-shadow để chữ rõ nét, tối giản */
+}
+.hide-on-pc { display: none; }
+@media (max-width: 500px) {
+  .hide-on-pc { display: inline; }
+  .fb-title { font-size: 1.2rem; }
+}
+
+/* Nhóm input + nút dán/preview */
+.fb-input-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  background: rgba(245, 247, 255, 0.5); /* nền trắng hơi trong suốt */
+  border-radius: var(--radius-medium);
+  padding: 8px 12px;
+  margin-bottom: 28px;
+}
+.fb-input {
+  flex: 1;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--radius-small);
+  font-size: 1.1rem;
+  background: #fff;
+  outline: none;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  min-width: 0;
+}
+.fb-input:focus {
+  box-shadow: 0 0 0 2px rgba(24, 119, 243, 0.3); /* viền xanh nhạt khi focus */
+}
+.fb-input-error {
+  background: #fff6f6 !important;
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.5) !important; /* viền đỏ khi lỗi */
+}
+
+/* Nút chung */
+.fb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: var(--radius-small);
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+/* Trạng thái disable cho nút */
+.fb-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Nút "Dán & Xem trước" */
+.fb-btn-preview {
+  background: var(--primary-color);
+  color: #fff;
+}
+.fb-btn-preview:disabled {
+  background: #a3cdfa !important;
+}
+
+/* Khu vực hiển thị video xem trước + các nút tải/copy */
+.fb-preview-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 30px;
+  background: #fafcff;  /* nền rất nhạt để phân biệt trong thẻ */
+  border-radius: var(--radius-medium);
+  margin: 40px 0 10px;
+  padding: 28px 24px;
+  /* Bóng đổ nhẹ bên trong (tuỳ chọn, có thể bỏ nếu muốn thật phẳng) */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+/* Cột trái: video */
+.fb-preview-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.fb-preview-video {
+  max-width: 470px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.fb-video-preview {
+  width: 100%;
+  max-width: 450px;
+  max-height: 360px;
+  border-radius: var(--radius-medium);
+  background: #000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+/* Cột phải: các nút hành động */
+.fb-preview-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 170px;
+  min-width: 130px;
+  gap: 10px;
+  padding-top: 8px;
+}
+.fb-btn-download {
+  background: linear-gradient(90deg, var(--success-color) 70%, var(--success-color-alt) 100%);
+  color: #fff;
+}
+.fb-btn-copy {
+  background: #f5f7fa;
+  color: var(--primary-color);
+}
+/* Nút "Video khác" (quay lại) – thiết kế như fb-btn-copy nhưng viền rõ hơn một chút */
+.fb-btn-back {
+  background: #f5f7fa;
+  color: var(--text-main);
+  border: 1px solid #e3ecfb;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* Thanh tiến trình tải */
+.fb-progress-wrap {
+  margin-top: 8px;
+}
+.fb-progress-bar-bg {
+  width: 100%;
+  height: 16px;
+  background: #e5e9f2;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.fb-progress-bar {
+  background: linear-gradient(90deg, var(--primary-color) 80%, var(--success-color) 100%);
+  height: 100%;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+.fb-progress-label {
+  margin-top: 3px;
+  color: var(--text-main);
+  font-weight: 500;
+  font-size: 1.02rem;
+  text-align: center;
+}
+
+/* Thông báo thành công/lỗi */
+.fb-alert {
+  margin-top: 20px;
+  padding: 12px 18px;
+  border-radius: var(--radius-small);
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+.fb-alert-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.fb-alert-error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Hướng dẫn sử dụng */
+.fb-guide {
+  margin-top: 30px;
+  padding: 12px 10px;
+  border-radius: var(--radius-medium);
+  font-size: 1.08rem;
+  background: rgba(245, 245, 247, 0.94);
+  color: #6c7a89;
+}
+
+/* Dòng chữ bản quyền */
+.fb-powered {
+  margin-top: 22px;
+  color: #bdbdbd;
+  font-size: 14px;
+  letter-spacing: 0.15px;
+}
+
+/* Đáp ứng mobile: xếp dọc phần xem trước và tinh chỉnh kích thước video */
+@media (max-width: 900px) {
+  .fb-preview-row {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 8px;
+    /* min-height không cần thiết ở mobile */
+  }
+  .fb-preview-col, .fb-preview-video {
+    width: 100%;
+    max-width: 100%;
+  }
+  .fb-video-preview {
+    max-width: 100%;
+    max-height: 180px;
+    min-height: 110px;
+  }
+  .fb-preview-actions {
+    flex-direction: row;
+    width: 100%;
+    gap: 10px;
+    margin-top: 8px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+  }
+}
+.fb-spin {
+  animation: fb-spin 1s linear infinite;
+}
+@keyframes fb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fb-video-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #223250;
+  margin-bottom: 12px;
+  text-align: left;
+  line-height: 1.34;
+  max-width: 430px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .fb-video-title {
+    max-width: 98vw;
+    font-size: 1.02rem;
+    white-space: normal;
+  }
+}

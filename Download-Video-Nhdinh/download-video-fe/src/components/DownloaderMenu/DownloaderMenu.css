@@ -1,0 +1,67 @@
+.downloader-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  margin: 20px 0 36px 0;
+}
+.downloader-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #222;
+  background: #f5f7fa;
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: box-shadow .18s, background .16s, color .16s;
+  box-shadow: 0 1px 5px rgba(24,119,243,0.03);
+}
+.downloader-menu-item.active,
+.downloader-menu-item:hover {
+  background: #eaf4ff;
+  color: #1877f3;
+  box-shadow: 0 2px 14px rgba(24,119,243,0.08);
+}
+.downloader-menu-item svg {
+  font-size: 1.3rem;
+}
+.downloader-menu-item.coming-soon {
+  opacity: 0.65;
+  cursor: pointer;
+  position: relative;
+  pointer-events: auto;
+}
+.downloader-menu-item.coming-soon .badge-soon {
+  margin-left: 8px;
+  background: #ffc107;
+  color: #222;
+  border-radius: 10px;
+  font-size: 0.89em;
+  padding: 2px 9px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(255,193,7,0.08);
+}
+.toast-coming-soon {
+  position: fixed;
+  left: 50%;
+  bottom: 44px;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 1.08em;
+  font-weight: 500;
+  z-index: 2002;
+  box-shadow: 0 4px 28px 0 rgba(0,0,0,0.09);
+  animation: fadeInOut 2.2s;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; bottom: 30px;}
+  10% { opacity: 1; bottom: 44px;}
+  90% { opacity: 1; }
+  100% { opacity: 0; bottom: 60px;}
+}
