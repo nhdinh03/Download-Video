@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaTwitter, FaAt
+  FaFacebook,
+  FaInstagram,
+  FaYoutube,
+  FaTiktok,
+  FaTwitter,
+  FaAt,
 } from "react-icons/fa";
 import "./Home.scss";
 
@@ -11,6 +16,13 @@ const platforms = [
     path: "/download/facebook",
     icon: <FaFacebook color="#1877f3" size={44} />,
     desc: "Tải video Facebook tốc độ cao.",
+    active: true,
+  },
+  {
+    name: "Instagram",
+    path: "/download/instagram",
+    icon: <FaInstagram color="#E1306C" size={44} />,
+    desc: "Tải video instagram tốc độ cao.",
     active: true,
   },
   {
@@ -27,13 +39,7 @@ const platforms = [
     desc: "Đang phát triển...",
     active: false,
   },
-  {
-    name: "Instagram",
-    path: "/download/instagram",
-    icon: <FaInstagram color="#E1306C" size={44} />,
-    desc: "Đang phát triển...",
-    active: false,
-  },
+
   {
     name: "Tiktok",
     path: "/download/tiktok",
@@ -74,15 +80,25 @@ export default function Home() {
         <nav>
           <Link to="/">Home</Link>
           <Link to="/guide">Hướng dẫn</Link>
-          
-          <a href="https://github.com/" target="_blank" rel="noopener noreferrer">Github</a>
+
+          <a
+            href="https://github.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Github
+          </a>
         </nav>
       </header>
 
       <section className="home-hero">
         <h1>
-          Tải Video <span className="primary-gradient">Facebook, Youtube, Threads</span> <br />
-          <span className="home-hero-sub">Miễn phí • Nhanh • Chuyên nghiệp</span>
+          Tải Video{" "}
+          <span className="primary-gradient">Facebook, Youtube, Threads</span>{" "}
+          <br />
+          <span className="home-hero-sub">
+            Miễn phí • Nhanh • Chuyên nghiệp
+          </span>
         </h1>
         <p className="home-hero-desc">
           Dán link video bạn cần tải, chọn nền tảng, <b>tải về ngay!</b> <br />
@@ -125,15 +141,12 @@ export default function Home() {
       </section>
 
       <footer className="home-footer">
-        © {new Date().getFullYear()} Nhdinh Downloader Pro - All rights reserved. | Built with ❤️
+        © {new Date().getFullYear()} Nhdinh Downloader Pro - All rights
+        reserved. | Built with ❤️
       </footer>
 
       {/* Toast Notification */}
-      {toast && (
-        <div className="toast-coming-soon">
-          {toast}
-        </div>
-      )}
+      {toast && <div className="toast-coming-soon">{toast}</div>}
     </div>
   );
 }
