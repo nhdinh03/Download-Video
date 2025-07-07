@@ -1,9 +1,20 @@
 package Facebook.example.com.controller;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,89 +32,132 @@ import Facebook.example.com.util.InstagramVideoUtil;
 @CrossOrigin(origins = "*")
 public class InstagramVideoController {
 
-    // Create logger instance
     private static final Logger logger = LoggerFactory.getLogger(InstagramVideoController.class);
 
-    // Endpoint to fetch video preview (getting video URL)
     @PostMapping("/preview")
-    public ResponseEntity<Object> previewVideo(@RequestBody String url) {
-        logger.info("Received preview request for URL: {}", url);
+    public ResponseEntity<Map<String, String>> previewVideo(@RequestBody Map<String, String> payload) {
+        String instaUrl = payload.get("url");
+        logger.info("Received preview request for URL: {}", instaUrl);
 
-        String videoUrl = fetchVideoUrl(url);  // Implement video URL fetching logic
-
-        if (videoUrl == null) {
-            logger.error("Invalid Instagram URL or unable to fetch video for URL: {}", url);
-            return ResponseEntity.badRequest().body("{\"error\": \"Invalid Instagram URL or unable to fetch video.\"}");
+        if (instaUrl == null || !instaUrl.matches("https?://(www\\.)?instagram\\.com/(p|reel|tv)/[a-zA-Z0-9_-]+/?")) {
+            logger.error("Invalid Instagram URL: {}", instaUrl);
+            return ResponseEntity.badRequest().body(Map.of("error", "URL không hợp lệ."));
         }
 
-        logger.info("Successfully fetched video URL: {}", videoUrl);
-        return ResponseEntity.ok("{\"videoUrl\": \"" + videoUrl + "\", \"title\": \"Video Title\"}");
+        ProcessBuilder pb = new ProcessBuilder("yt-dlp", "-f", "best", "-g", "--get-title", instaUrl);
+        pb.redirectErrorStream(true);
+
+        List<String> outputLines = new ArrayList<>();
+        int exit = -1;
+        try {
+            Process process = pb.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    outputLines.add(line);
+                    logger.info("yt-dlp output: {}", line);
+                }
+            }
+            try {
+                exit = process.waitFor();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Interrupted while waiting for process: {}", e.getMessage());
+                return ResponseEntity.status(500).body(Map.of("error", "Lỗi hệ thống (quá trình bị gián đoạn)."));
+            }
+        } catch (IOException e) {
+            logger.error("IOException when running yt-dlp: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", "Lỗi hệ thống (không chạy được yt-dlp)."));
+        }
+        logger.info("yt-dlp exit code: {}", exit);
+
+        // Lấy directUrl là dòng đầu tiên chứa .mp4 và http
+        String directUrl = outputLines.stream()
+                .filter(line -> line.contains(".mp4") && line.startsWith("http"))
+                .findFirst().orElse(null);
+
+        // Lấy title là dòng đầu tiên không phải warning, không phải hướng dẫn, không phải link mp4
+        // Lọc title siêu sạch:
+        String videoTitle = outputLines.stream()
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .filter(line
+                        -> !line.toLowerCase().contains("warning")
+                && !line.startsWith("To let yt-dlp")
+                && !line.startsWith("If you know what you are doing")
+                && !line.startsWith("To let yt-dlp download")
+                && !line.startsWith("If you want only the best")
+                && !line.startsWith("Simply do not pass any format")
+                && !line.contains(".mp4")
+                && !line.startsWith("http")
+                )
+                .findFirst()
+                .orElse("")
+                .trim();
+
+        if (videoTitle.isEmpty()) {
+            videoTitle = "Instagram Video (không có tiêu đề)";
+        }
+
+        if (exit != 0 || directUrl == null) {
+            logger.error("Failed to fetch preview for URL: {}. Output: {}", instaUrl, outputLines);
+            return ResponseEntity.status(500).body(Map.of("error", "Không thể lấy link xem trước."));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "videoUrl", directUrl,
+                "title", videoTitle
+        ));
     }
 
-    // Method to fetch video URL (using an external service or scraping)
-    private String fetchVideoUrl(String instagramUrl) {
-        // Implement actual scraping logic or use a third-party service
-        logger.debug("Fetching video URL for Instagram URL: {}", instagramUrl);
-        return "https://instagram.com/path/to/video.mp4";  // This is a mock URL
-    }
-
-    // Endpoint to handle real-time download progress for Instagram videos
-    @GetMapping(value = "/download/stream", produces = "text/event-stream")
+    @GetMapping(value = "/download/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamDownload(@RequestParam String url) {
         logger.info("Received download request for URL: {}", url);
-        
-        SseEmitter emitter = new SseEmitter(300_000L);  // Timeout of 5 minutes
+        SseEmitter emitter = new SseEmitter(300_000L); // Timeout 5 phút
 
         new Thread(() -> {
             try {
-                logger.info("Starting download process for URL: {}", url);
-                
-                // Call the method that downloads the video with progress tracking
                 String filename = InstagramVideoUtil.downloadVideoUsingYtDlp(url, progress -> {
                     try {
-                        emitter.send(SseEmitter.event().data(progress)); // Send download progress
+                        emitter.send(SseEmitter.event().data(progress));
                     } catch (IOException e) {
-                        logger.error("Error sending progress update for download: {}", e.getMessage());
+                        logger.error("Client disconnected during SSE: {}", e.getMessage());
                     }
                 });
 
-                emitter.send(SseEmitter.event().data("DONE_" + filename));  // Send completion message
+                emitter.send(SseEmitter.event().data("DONE_" + filename));
                 logger.info("Download completed for file: {}", filename);
             } catch (Exception e) {
                 logger.error("Error during download: {}", e.getMessage());
                 try {
-                    emitter.send(SseEmitter.event().data("ERROR_" + e.getMessage())); // Send error message
+                    emitter.send(SseEmitter.event().data("ERROR_" + e.getMessage()));
                 } catch (IOException ignored) {
-                    logger.error("Error sending error message to client: {}", ignored.getMessage());
                 }
             } finally {
-                emitter.complete();  // End the SSE stream
+                emitter.complete();
             }
         }).start();
 
         return emitter;
     }
 
-    // Endpoint to handle video download initiation
+    /**
+     * Download file về máy người dùng
+     */
     @GetMapping("/download")
-    public ResponseEntity<Object> downloadVideo(@RequestParam String videoUrl) {
-        logger.info("Received request to download video: {}", videoUrl);
-        
-        boolean downloadStarted = startDownload(videoUrl);  // Start the download process
-
-        if (!downloadStarted) {
-            logger.error("Failed to start the download for URL: {}", videoUrl);
-            return ResponseEntity.status(500).body("Failed to start the download.");
+    public ResponseEntity<InputStreamResource> downloadVideo(@RequestParam String filename) throws IOException {
+        File file = new File(filename);
+        if (!file.exists()) {
+            logger.error("File not found: {}", filename);
+            return ResponseEntity.notFound().build();
         }
 
-        logger.info("Download process started for URL: {}", videoUrl);
-        return ResponseEntity.ok("Video download started.");
-    }
-
-    // Mock method for initiating the download
-    private boolean startDownload(String videoUrl) {
-        // Implement your actual download logic here
-        logger.debug("Starting download logic for URL: {}", videoUrl);
-        return true;
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+        logger.info("Serving file for download: {}", filename);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName())
+                .contentLength(file.length())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 }

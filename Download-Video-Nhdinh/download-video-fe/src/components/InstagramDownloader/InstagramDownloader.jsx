@@ -1,158 +1,304 @@
-import React, { useState } from "react";
-import { Button, Input, Progress, message, Card, Image, Typography } from "antd";
-import { FaDownload, FaRegCopy, FaSpinner } from "react-icons/fa";
-const { Text, Title } = Typography;
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import {
+  FaInstagram,
+  FaDownload,
+  FaRegCopy,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSpinner,
+  FaArrowLeft,
+} from "react-icons/fa";
+import "./InstagramDownloader.scss";
 
-const API_BASE = "http://localhost:8081/api/instagram";  // Backend API URL
+const API_BASE =
+  window.location.hostname === "localhost" ||
+  window.location.hostname.startsWith("192.168.")
+    ? `http://${window.location.hostname}:8081/api/instagram`
+    : "https://your-production-domain.com/api/instagram";
 
-function InstagramDownloader() {
-  const [url, setUrl] = useState('');
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
+export default function InstagramDownloader() {
+  const [url, setUrl] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [videoTitle, setVideoTitle] = useState("");
+  const sseRef = useRef(null);
 
   // Kiểm tra URL Instagram hợp lệ
-  const isValidInstagramUrl = (input) => {
-    const instagramRegex = /^https:\/\/www\.instagram\.com\/(p|reel|tv)\/[a-zA-Z0-9_-]+\/?/;
-    return instagramRegex.test(input.trim());
-  };
+  const isValidInstagramUrl = useCallback((input) => {
+    try {
+      const cleaned = decodeURIComponent(input.trim());
+      const urlObj = new URL(cleaned);
+      const host = urlObj.hostname;
+      const path = urlObj.pathname;
+      return (
+        host === "www.instagram.com" &&
+        (path.startsWith("/p/") ||
+          path.startsWith("/reel/") ||
+          path.startsWith("/tv/"))
+      );
+    } catch {
+      return false;
+    }
+  }, []);
 
   // Xem trước video
-  const handlePreview = async () => {
-    if (!url || !isValidInstagramUrl(url)) {
-      setError("Vui lòng nhập link Instagram hợp lệ");
-      return;
-    }
-
-    setLoadingPreview(true);
-    setError('');
-    setPreviewUrl('');
-    setVideoTitle('');
-    setThumbnailUrl('');
-
-    try {
-      const res = await fetch(`${API_BASE}/preview`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.videoUrl) {
-        throw new Error("Không thể lấy video");
+  const handlePreview = useCallback(
+    async (inputUrl = url) => {
+      if (!inputUrl) return;
+      if (!isValidInstagramUrl(inputUrl)) {
+        setError("Vui lòng nhập đúng link video Instagram!");
+        return;
       }
-
-      setPreviewUrl(data.videoUrl); // Set preview video URL
-      setVideoTitle(data.title || 'Video');  // Set video title
-      setThumbnailUrl(data.thumbnail);  // Set video thumbnail (if available)
-    } catch (err) {
-      setError("Lỗi: " + (err.message || "Không lấy được video"));
-    } finally {
-      setLoadingPreview(false);
-    }
-  };
+      setLoadingPreview(true);
+      setError("");
+      setSuccess("");
+      setPreviewUrl("");
+      setCopied(false);
+      setVideoTitle("");
+      try {
+        const res = await fetch(`${API_BASE}/preview`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: inputUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.videoUrl)
+          throw new Error(data.error || "Không lấy được video");
+        setPreviewUrl(data.videoUrl);
+        setVideoTitle(data.title || "");
+      } catch (err) {
+        setError("Lỗi: " + (err?.message || "Không lấy được video"));
+      } finally {
+        setLoadingPreview(false);
+      }
+    },
+    [url, isValidInstagramUrl]
+  );
 
   // Tải video
-  const handleDownload = async () => {
-    if (!previewUrl) {
-      setError("Vui lòng xem trước video trước khi tải!");
+  const handleDownload = useCallback(() => {
+    if (!isValidInstagramUrl(url)) {
+      setError("Vui lòng nhập đúng link video Instagram!");
       return;
     }
-
     setLoadingDownload(true);
     setProgress(0);
-    setError('');
+    setError("");
+    setSuccess("");
 
-    const eventSource = new EventSource(`${API_BASE}/download/stream?url=${encodeURIComponent(url)}`);
+    const eventSource = new EventSource(
+      `${API_BASE}/download/stream?url=${encodeURIComponent(url)}`
+    );
+    sseRef.current = eventSource;
 
     eventSource.onmessage = (e) => {
       const msg = e.data;
       if (msg.startsWith("PROGRESS_")) {
         setProgress(Number(msg.replace("PROGRESS_", "")));
       } else if (msg.startsWith("DONE_")) {
+        const fileName = msg.replace("DONE_", "");
         setProgress(100);
-        message.success("Tải video thành công!");
+        setSuccess("Video đã sẵn sàng để tải xuống...");
+        const tempLink = document.createElement("a");
+        tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(
+          fileName
+        )}`;
+        tempLink.download = fileName;
+        tempLink.click();
+        setSuccess("Tải video thành công!");
+        setLoadingDownload(false);
         eventSource.close();
       } else if (msg.startsWith("ERROR_")) {
         setError(msg.replace("ERROR_", ""));
+        setLoadingDownload(false);
         eventSource.close();
       }
     };
-
     eventSource.onerror = () => {
-      setError("Mất kết nối máy chủ, đang thử lại...");
-      eventSource.close();
+      if (progress < 100) {
+        setError("Mất kết nối máy chủ, đang thử lại...");
+        eventSource.close();
+        setTimeout(() => handleDownload(), 2000);
+      }
     };
+  }, [url, isValidInstagramUrl, progress]);
+
+  // Cleanup SSE khi component unmount
+  useEffect(() => {
+    return () => {
+      if (sseRef.current) sseRef.current.close();
+    };
+  }, []);
+
+  // Quay lại/chọn video khác
+  const handleBack = () => {
+    setUrl("");
+    setPreviewUrl("");
+    setSuccess("");
+    setError("");
+    setCopied(false);
+    setProgress(0);
+    setVideoTitle("");
   };
 
-  // Function to paste the link from the clipboard
-  const handlePasteLink = async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      const cleanedUrl = clipboardText.trim();
-      setUrl(cleanedUrl);
-      handlePreview();
-    } catch (err) {
-      setError("Không thể tự động dán từ clipboard. Hãy thử lại!");
-    }
-  };
+  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
   return (
-    <div className="instagram-downloader-container">
-      <Card title="Instagram Video Downloader" style={{ width: 600, margin: '0 auto' }}>
-        <Input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Dán link video Instagram"
-          allowClear
-          enterButton="Xem trước"
-          size="large"
-          onSearch={handlePreview}
-          loading={loadingPreview}
-        />
-        {/* Dán Link Button */}
-        <Button
-          onClick={handlePasteLink}
-          icon={<FaRegCopy />}
-          style={{ marginTop: 10 }}
-        >
-          Dán link từ clipboard
-        </Button>
+    <div className="main-center">
+      <div className="insta-downloader-root">
+        {!previewUrl && (
+          <>
+            <div className="insta-header">
+              <FaInstagram className="insta-logo" />
+              <span className="insta-title">
+                Instagram Video <br className="hide-on-pc" /> Downloader
+              </span>
+            </div>
+            <div className="insta-input-group">
+              <input
+                type="url"
+                className={`insta-input${
+                  url && !isValidInstagramUrl(url) ? " insta-input-error" : ""
+                }`}
+                placeholder="Dán link video Instagram..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePreview(url);
+                }}
+                spellCheck={false}
+                autoFocus
+                autoComplete="off"
+              />
+              <button
+                className="insta-btn insta-btn-preview"
+                onClick={async () => {
+                  try {
+                    if (!navigator.clipboard)
+                      throw new Error("Clipboard API không khả dụng.");
+                    const clipboardText = await navigator.clipboard.readText();
+                    const cleanedUrl = clipboardText.trim();
+                    setUrl(cleanedUrl);
+                    handlePreview(cleanedUrl);
+                  } catch (err) {
+                    setError(
+                      isMobile
+                        ? "Không thể tự động dán từ clipboard, hãy dán thủ công!"
+                        : "Không thể đọc clipboard. Hãy thử lại hoặc tự dán link!"
+                    );
+                  }
+                }}
+                disabled={loadingPreview}
+              >
+                {loadingPreview ? (
+                  <FaSpinner className="insta-spin" />
+                ) : (
+                  <FaRegCopy />
+                )}
+                {loadingPreview ? "Đang xử lý..." : "Dán & Xem trước"}
+              </button>
+            </div>
+          </>
+        )}
 
-        {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-
-        {/* Preview Section */}
         {previewUrl && (
-          <div>
-            <Title level={4}>{videoTitle}</Title>
-            <Image
-              src={thumbnailUrl || "https://via.placeholder.com/150"}
-              alt="Thumbnail"
-              width="100%"
-              style={{ borderRadius: 8, marginBottom: 10 }}
-            />
-            <video src={previewUrl} controls style={{ width: '100%', borderRadius: 8 }} />
-            <Button
-              type="primary"
-              icon={<FaDownload />}
-              onClick={handleDownload}
-              loading={loadingDownload}
-              style={{ marginTop: 10 }}
-            >
-              {loadingDownload ? "Đang tải..." : "Tải video"}
-            </Button>
+          <div className="insta-preview-row">
+            <div className="insta-preview-col insta-preview-video">
+              {videoTitle && (
+                <div
+                  className="insta-video-title"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.12rem",
+                    marginBottom: 10,
+                    color: "#1b2535",
+                    opacity: videoTitle.includes("không có tiêu đề") ? 0.7 : 1, // Làm mờ nếu không có tiêu đề thật
+                  }}
+                >
+                  {videoTitle}
+                </div>
+              )}
+
+              <video
+                src={previewUrl}
+                controls
+                className="insta-video-preview"
+              />
+            </div>
+
+            <div className="insta-preview-col insta-preview-actions">
+              <button
+                className="insta-btn insta-btn-download"
+                onClick={handleDownload}
+                disabled={loadingDownload}
+              >
+                {loadingDownload ? (
+                  <FaSpinner className="insta-spin" />
+                ) : (
+                  <FaDownload />
+                )}
+                {loadingDownload ? "Đang tải..." : "Lưu về máy"}
+              </button>
+              <button
+                className="insta-btn insta-btn-copy"
+                onClick={() => {
+                  navigator.clipboard.writeText(previewUrl);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+                disabled={copied}
+              >
+                {copied ? <FaCheckCircle color="#43a047" /> : <FaRegCopy />}
+                {copied ? "Đã copy link" : "Copy link"}
+              </button>
+              <button className="insta-btn insta-btn-back" onClick={handleBack}>
+                <FaArrowLeft /> Video khác
+              </button>
+            </div>
+          </div>
+        )}
+        {loadingDownload && (
+          <div className="insta-progress-wrap">
+            <div className="insta-progress-bar-bg">
+              <div
+                className="insta-progress-bar"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="insta-progress-label">{progress}%</div>
           </div>
         )}
 
-        {/* Progress Bar */}
-        <Progress percent={progress} status="active" strokeColor="#108ee9" style={{ marginTop: 20 }} />
-      </Card>
+        {(error || success) && (
+          <div
+            className={`insta-alert ${
+              success ? "insta-alert-success" : "insta-alert-error"
+            }`}
+          >
+            {success ? <FaCheckCircle /> : <FaTimesCircle />}
+            {success || error}
+          </div>
+        )}
+
+        {!previewUrl && (
+          <div className="insta-guide">
+            <b>Hướng dẫn:</b> Hãy dán link video Instagram vào ô trên{" "}
+            {isMobile && "(nhấn giữ để dán trên điện thoại)"}, sau đó bấm{" "}
+            <b>Dán & Xem trước</b> → khi video hiện ra, bấm <b>Lưu về máy</b> để
+            tải.
+          </div>
+        )}
+
+        <div className="insta-powered">
+          <br />© {new Date().getFullYear()} Instagram Video Downloader. All
+          rights reserved.
+        </div>
+      </div>
     </div>
   );
 }
-
-export default InstagramDownloader;
