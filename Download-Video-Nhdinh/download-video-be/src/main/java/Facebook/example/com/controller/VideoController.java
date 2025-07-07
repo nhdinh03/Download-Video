@@ -43,7 +43,8 @@ public class VideoController {
             } catch (Exception e) {
                 try {
                     emitter.send(SseEmitter.event().data("ERROR_" + e.getMessage()));
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
             } finally {
                 emitter.complete();
             }
@@ -55,7 +56,9 @@ public class VideoController {
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadVideo(@RequestParam String filename) throws IOException {
         File file = new File(filename);
-        if (!file.exists()) return ResponseEntity.notFound().build();
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()
@@ -66,37 +69,37 @@ public class VideoController {
     }
 
     @PostMapping("/preview")
-    public ResponseEntity<String> previewVideo(@RequestBody Map<String, String> payload) throws IOException {
+    public ResponseEntity<Map<String, String>> previewVideo(@RequestBody Map<String, String> payload) throws IOException {
         String fbUrl = payload.get("url");
         if (fbUrl == null || !fbUrl.matches("https?://(www\\.)?(facebook\\.com|fb\\.watch|fb\\.com)/.*")) {
-            return ResponseEntity.badRequest().body("URL không hợp lệ.");
+            return ResponseEntity.badRequest().body(Map.of("error", "URL không hợp lệ."));
         }
 
-        ProcessBuilder pb = new ProcessBuilder("yt-dlp", "-f", "b", "-g", fbUrl);
+        ProcessBuilder pb = new ProcessBuilder("yt-dlp", "-f", "b", "-g", "--get-title", fbUrl);
         pb.redirectErrorStream(true);
-
         Process process = pb.start();
+
+        String videoTitle = null;
         String directUrl = null;
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("http")) {
-                    directUrl = line.trim();
-                    break;
-                }
-            }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"))) {
+            videoTitle = reader.readLine(); // Dòng đầu là title
+            directUrl = reader.readLine();  // Dòng hai là link mp4
         }
 
         try {
             int exit = process.waitFor();
             if (exit != 0 || directUrl == null || !directUrl.contains(".mp4")) {
-                return ResponseEntity.status(500).body("Không thể lấy link xem trước.");
+                return ResponseEntity.status(500).body(Map.of("error", "Không thể lấy link xem trước."));
             }
-            return ResponseEntity.ok(directUrl);
+            return ResponseEntity.ok(Map.of(
+                    "videoUrl", directUrl,
+                    "title", videoTitle != null ? videoTitle : ""
+            ));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return ResponseEntity.status(500).body("Lỗi hệ thống.");
+            return ResponseEntity.status(500).body(Map.of("error", "Lỗi hệ thống."));
         }
     }
+
 }
