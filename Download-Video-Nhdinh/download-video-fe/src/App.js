@@ -23,10 +23,12 @@ function App() {
           <Route path="/download/threads" element={<ThreadsDownloader />} />
           <Route path="/download/youtube" element={<YoutubeDownloader />} />
           <Route path="/guide" element={<Guide />} />
-          <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={<NotFound />} /> {/* This is for undefined paths */}
         </Routes>
+
       </MainLayout>
     </BrowserRouter>
   );
 }
+
 export default App;
