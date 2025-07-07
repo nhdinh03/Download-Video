@@ -8,7 +8,7 @@ import {
   FaSpinner,
   FaArrowLeft,
 } from "react-icons/fa";
-import "./FacebookDownloader.css";
+import "./FacebookDownloader.scss";
 
 const API_BASE =
   window.location.hostname === "localhost" ||

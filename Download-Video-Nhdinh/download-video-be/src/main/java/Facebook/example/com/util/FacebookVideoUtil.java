@@ -1,4 +1,4 @@
-package Facebook.example.com.controller;
+package Facebook.example.com.util;
 
 import java.io.BufferedReader;
 import java.io.File;
