@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaRegCopy, FaCheckCircle, FaDownload, FaInfoCircle } from "react-icons/fa";
+import { FaRegCopy, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import { PiNotebookLight, PiArrowRightLight } from "react-icons/pi";
 import { SiFacebook, SiYoutube, SiInstagram, SiTiktok } from "react-icons/si";
 import Tooltip from "@mui/material/Tooltip";

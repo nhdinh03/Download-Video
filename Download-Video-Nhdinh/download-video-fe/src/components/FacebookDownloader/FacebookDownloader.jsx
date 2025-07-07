@@ -1,7 +1,12 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
-  FaFacebook, FaDownload, FaRegCopy, FaCheckCircle,
-  FaTimesCircle, FaSpinner, FaArrowLeft,
+  FaFacebook,
+  FaDownload,
+  FaRegCopy,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSpinner,
+  FaArrowLeft,
 } from "react-icons/fa";
 import "./FacebookDownloader.css";
 
@@ -98,7 +103,9 @@ export default function FacebookDownloader() {
         setProgress(100);
         setSuccess("Video đã sẵn sàng để tải xuống...");
         const tempLink = document.createElement("a");
-        tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(fileName)}`;
+        tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(
+          fileName
+        )}`;
         tempLink.download = fileName;
         tempLink.click();
         setSuccess("Tải video thành công!");
@@ -154,11 +161,15 @@ export default function FacebookDownloader() {
             <div className="fb-input-group">
               <input
                 type="url"
-                className={`fb-input${url && !isValidFacebookUrl(url) ? " fb-input-error" : ""}`}
+                className={`fb-input${
+                  url && !isValidFacebookUrl(url) ? " fb-input-error" : ""
+                }`}
                 placeholder="Dán link video Facebook..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handlePreview(url); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePreview(url);
+                }}
                 spellCheck={false}
                 autoFocus
                 autoComplete="off"
@@ -183,7 +194,11 @@ export default function FacebookDownloader() {
                 }}
                 disabled={loadingPreview}
               >
-                {loadingPreview ? <FaSpinner className="fb-spin" /> : <FaRegCopy />}
+                {loadingPreview ? (
+                  <FaSpinner className="fb-spin" />
+                ) : (
+                  <FaRegCopy />
+                )}
                 {loadingPreview ? "Đang xử lý..." : "Dán & Xem trước"}
               </button>
             </div>
@@ -196,15 +211,21 @@ export default function FacebookDownloader() {
             <div className="fb-preview-col fb-preview-video">
               {/* Tiêu đề video (nếu có) */}
               {videoTitle && (
-                <div className="fb-video-title" style={{
-                  fontWeight: 600,
-                  fontSize: "1.12rem",
-                  marginBottom: 10,
-                  color: "#1b2535"
-                }}>{videoTitle}</div>
+                <div
+                  className="fb-video-title"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.12rem",
+                    marginBottom: 10,
+                    color: "#1b2535",
+                  }}
+                >
+                  {videoTitle}
+                </div>
               )}
               <video src={previewUrl} controls className="fb-video-preview" />
             </div>
+
             {/* Các nút hành động: Tải, Copy, Tiến trình, Quay lại */}
             <div className="fb-preview-col fb-preview-actions">
               <button
@@ -212,7 +233,11 @@ export default function FacebookDownloader() {
                 onClick={handleDownload}
                 disabled={loadingDownload}
               >
-                {loadingDownload ? <FaSpinner className="fb-spin" /> : <FaDownload />}
+                {loadingDownload ? (
+                  <FaSpinner className="fb-spin" />
+                ) : (
+                  <FaDownload />
+                )}
                 {loadingDownload ? "Đang tải..." : "Lưu về máy"}
               </button>
               <button
@@ -248,7 +273,9 @@ export default function FacebookDownloader() {
         {/* Thông báo lỗi/thành công */}
         {(error || success) && (
           <div
-            className={`fb-alert ${success ? "fb-alert-success" : "fb-alert-error"}`}
+            className={`fb-alert ${
+              success ? "fb-alert-success" : "fb-alert-error"
+            }`}
           >
             {success ? <FaCheckCircle /> : <FaTimesCircle />}
             {success || error}
@@ -260,12 +287,14 @@ export default function FacebookDownloader() {
           <div className="fb-guide">
             <b>Hướng dẫn:</b> Hãy dán link video Facebook vào ô trên{" "}
             {isMobile && "(nhấn giữ để dán trên điện thoại)"}, sau đó bấm{" "}
-            <b>Dán & Xem trước</b> → khi video hiện ra, bấm <b>Lưu về máy</b> để tải.
+            <b>Dán & Xem trước</b> → khi video hiện ra, bấm <b>Lưu về máy</b> để
+            tải.
           </div>
         )}
 
         <div className="fb-powered">
-          © {new Date().getFullYear()} Facebook Video Downloader. All rights reserved.
+          © {new Date().getFullYear()} Facebook Video Downloader. All rights
+          reserved.
         </div>
       </div>
     </div>
