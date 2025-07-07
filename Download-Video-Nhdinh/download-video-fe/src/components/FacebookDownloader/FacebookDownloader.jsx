@@ -252,21 +252,22 @@ export default function FacebookDownloader() {
                 {copied ? <FaCheckCircle color="#43a047" /> : <FaRegCopy />}
                 {copied ? "Đã copy link" : "Copy link"}
               </button>
-              {loadingDownload && (
-                <div className="fb-progress-wrap">
-                  <div className="fb-progress-bar-bg">
-                    <div
-                      className="fb-progress-bar"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="fb-progress-label">{progress}%</div>
-                </div>
-              )}
+
               <button className="fb-btn fb-btn-back" onClick={handleBack}>
                 <FaArrowLeft /> Video khác
               </button>
             </div>
+          </div>
+        )}
+        {loadingDownload && (
+          <div className="fb-progress-wrap">
+            <div className="fb-progress-bar-bg">
+              <div
+                className="fb-progress-bar"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="fb-progress-label">{progress}%</div>
           </div>
         )}
 
@@ -293,8 +294,8 @@ export default function FacebookDownloader() {
         )}
 
         <div className="fb-powered">
-          © {new Date().getFullYear()} Facebook Video Downloader. All rights
-          reserved.
+          <br />© {new Date().getFullYear()} Nhdinh Facebook Video Downloader. All
+          rights reserved.
         </div>
       </div>
     </div>

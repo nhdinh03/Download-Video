@@ -125,7 +125,7 @@ export default function Home() {
       </section>
 
       <footer className="home-footer">
-        © {new Date().getFullYear()}Nhdinh Downloader Pro - All rights reserved. | Built with ❤️
+        © {new Date().getFullYear()} Nhdinh Downloader Pro - All rights reserved. | Built with ❤️
       </footer>
 
       {/* Toast Notification */}

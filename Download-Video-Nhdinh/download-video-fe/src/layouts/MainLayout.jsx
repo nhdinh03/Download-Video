@@ -18,7 +18,7 @@ export default function MainLayout({ children }) {
       <main className="main-content">{children}</main>
       <footer className="main-footer">
         <small>
-          © {new Date().getFullYear()} Video Downloader Pro. All rights
+          © {new Date().getFullYear()} Nhdinh Video Downloader Pro. All rights
           reserved.
         </small>
       </footer>
