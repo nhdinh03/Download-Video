@@ -3,7 +3,7 @@ import { FaRegCopy, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import { PiNotebookLight, PiArrowRightLight } from "react-icons/pi";
 import { SiFacebook, SiYoutube, SiInstagram, SiTiktok } from "react-icons/si";
 import Tooltip from "@mui/material/Tooltip";
-import "./Guide.css";
+import "./Guide.scss";
 
 function Guide() {
   const [copied, setCopied] = useState(false);

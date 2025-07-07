@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaFacebook, FaInstagram, FaTiktok, FaTwitter, FaYoutube, FaAt
 } from "react-icons/fa";
-import "./DownloaderMenu.css";
+import "./DownloaderMenu.scss";
 
 const platforms = [
   { name: "Facebook", path: "/download/facebook", icon: <FaFacebook color="#1877f3" />, active: true },

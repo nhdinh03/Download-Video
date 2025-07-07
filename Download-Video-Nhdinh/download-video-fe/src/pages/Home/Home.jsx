@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaTwitter, FaAt
 } from "react-icons/fa";
-import "./Home.css";
+import "./Home.scss";
 
 const platforms = [
   {

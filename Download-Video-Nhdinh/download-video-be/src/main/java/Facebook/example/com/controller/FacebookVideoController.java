@@ -25,7 +25,7 @@ import Facebook.example.com.util.FacebookVideoUtil;
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
-public class VideoController {
+public class FacebookVideoController {
 
     @GetMapping(value = "/download/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamDownload(@RequestParam String url) {

@@ -1,0 +1,99 @@
+// Variables for colors and other constants
+$primary-color: #1877f3;
+$background-color-light: #f5f7fa;
+$background-color-hover: #eaf4ff;
+$badge-color: #ffc107;
+$text-color-dark: #222;
+$box-shadow-light: rgba(24, 119, 243, 0.03);
+$box-shadow-hover: rgba(24, 119, 243, 0.08);
+$toast-background: #222;
+$toast-color: #fff;
+$toast-shadow: rgba(0, 0, 0, 0.09);
+
+// Menu styles
+.downloader-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  margin: 20px 0 36px 0;
+
+  .downloader-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $text-color-dark;
+    background: $background-color-light;
+    padding: 9px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: box-shadow 0.18s, background 0.16s, color 0.16s;
+    box-shadow: 0 1px 5px $box-shadow-light;
+
+    &.active,
+    &:hover {
+      background: $background-color-hover;
+      color: $primary-color;
+      box-shadow: 0 2px 14px $box-shadow-hover;
+    }
+
+    svg {
+      font-size: 1.3rem;
+    }
+
+    &.coming-soon {
+      opacity: 0.65;
+      cursor: pointer;
+      position: relative;
+      pointer-events: auto;
+
+      .badge-soon {
+        margin-left: 8px;
+        background: $badge-color;
+        color: $text-color-dark;
+        border-radius: 10px;
+        font-size: 0.89em;
+        padding: 2px 9px;
+        font-weight: 600;
+        box-shadow: 0 1px 4px rgba(255, 193, 7, 0.08);
+      }
+    }
+  }
+}
+
+// Toast styles
+.toast-coming-soon {
+  position: fixed;
+  left: 50%;
+  bottom: 44px;
+  transform: translateX(-50%);
+  background: $toast-background;
+  color: $toast-color;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 1.08em;
+  font-weight: 500;
+  z-index: 2002;
+  box-shadow: 0 4px 28px 0 $toast-shadow;
+  animation: fadeInOut 2.2s;
+
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+      bottom: 30px;
+    }
+    10% {
+      opacity: 1;
+      bottom: 44px;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      bottom: 60px;
+    }
+  }
+}
