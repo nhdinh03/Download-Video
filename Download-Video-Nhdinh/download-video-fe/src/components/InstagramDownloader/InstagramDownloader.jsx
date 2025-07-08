@@ -28,19 +28,14 @@ export default function InstagramDownloader() {
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
 
-  // Kiểm tra URL Instagram hợp lệ
+  // Kiểm tra URL Instagram hợp lệ, chỉ cho phép dạng Reel
   const isValidInstagramUrl = useCallback((input) => {
     try {
       const cleaned = decodeURIComponent(input.trim());
       const urlObj = new URL(cleaned);
       const host = urlObj.hostname;
       const path = urlObj.pathname;
-      return (
-        host === "www.instagram.com" &&
-        (path.startsWith("/p/") ||
-          path.startsWith("/reel/") ||
-          path.startsWith("/tv/"))
-      );
+      return host === "www.instagram.com" && path.startsWith("/reel/");
     } catch {
       return false;
     }
@@ -51,7 +46,7 @@ export default function InstagramDownloader() {
     async (inputUrl = url) => {
       if (!inputUrl) return;
       if (!isValidInstagramUrl(inputUrl)) {
-        setError("Vui lòng nhập đúng link video Instagram!");
+        setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
         return;
       }
       setLoadingPreview(true);
@@ -83,7 +78,7 @@ export default function InstagramDownloader() {
   // Tải video
   const handleDownload = useCallback(() => {
     if (!isValidInstagramUrl(url)) {
-      setError("Vui lòng nhập đúng link video Instagram!");
+      setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
       return;
     }
     setLoadingDownload(true);
@@ -217,7 +212,7 @@ export default function InstagramDownloader() {
                     fontSize: "1.12rem",
                     marginBottom: 10,
                     color: "#1b2535",
-                    opacity: videoTitle.includes("không có tiêu đề") ? 0.7 : 1, // Làm mờ nếu không có tiêu đề thật
+                    opacity: videoTitle.includes("không có tiêu đề") ? 0.7 : 1,
                   }}
                 >
                   {videoTitle}
@@ -284,6 +279,7 @@ export default function InstagramDownloader() {
             {success || error}
           </div>
         )}
+        <br />
 
         {!previewUrl && (
           <div className="insta-guide">

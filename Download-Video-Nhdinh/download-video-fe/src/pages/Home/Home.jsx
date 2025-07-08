@@ -81,13 +81,10 @@ export default function Home() {
           <Link to="/">Home</Link>
           <Link to="/guide">Hướng dẫn</Link>
 
-          <a
-            href="https://github.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Github
-          </a>
+          <Link to="/download/history">
+    
+           Lịch sử tải về
+          </Link>
         </nav>
       </header>
 

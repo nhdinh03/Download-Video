@@ -92,7 +92,7 @@ public class FacebookVideoController {
         try {
             int exit = process.waitFor();
             if (exit != 0 || directUrl == null || !directUrl.contains(".mp4")) {
-                return ResponseEntity.status(500).body(Map.of("error", "Không thể lấy link xem trước."));
+                return ResponseEntity.status(500).body(Map.of("error", "Kiểm tra lại link."));
             }
             return ResponseEntity.ok(Map.of(
                     "videoUrl", directUrl,
