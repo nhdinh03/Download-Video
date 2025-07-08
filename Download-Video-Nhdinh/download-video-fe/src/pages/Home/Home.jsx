@@ -44,8 +44,8 @@ const platforms = [
     name: "Tiktok",
     path: "/download/tiktok",
     icon: <FaTiktok color="#222" size={44} />,
-    desc: "Đang phát triển...",
-    active: false,
+    desc: "Tải video tiktok tốc độ cao.",
+    active: true,
   },
   {
     name: "Twitter",

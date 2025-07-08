@@ -8,7 +8,7 @@ import "./DownloaderMenu.scss";
 const platforms = [
   { name: "Facebook", path: "/download/facebook", icon: <FaFacebook color="#1877f3" />, active: true },
   { name: "Instagram", path: "/download/instagram", icon: <FaInstagram color="#E1306C" />, active: true },
-  { name: "TikTok", path: "/download/tiktok", icon: <FaTiktok color="#000" />, active: false },
+  { name: "TikTok", path: "/download/tiktok", icon: <FaTiktok color="#000" />, active: true },
   { name: "Twitter", path: "/download/twitter", icon: <FaTwitter color="#1da1f2" />, active: false },
   { name: "Threads", path: "/download/threads", icon: <FaAt color="#000" />, active: false },
   { name: "Youtube", path: "/download/youtube", icon: <FaYoutube color="#f00" />, active: false },
