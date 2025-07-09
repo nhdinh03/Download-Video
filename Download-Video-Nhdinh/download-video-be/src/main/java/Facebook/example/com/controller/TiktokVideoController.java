@@ -5,8 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -188,17 +190,33 @@ public class TiktokVideoController {
         String effectiveProxy = isValidProxy(proxy) ? proxy : "";
 
         while (retries > 0) {
-            ProcessBuilder pb = new ProcessBuilder(
-                    ytDlpPath,
-                    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                    "--add-header", "Referer:https://www.tiktok.com/",
-                    "--add-header", "Origin:https://www.tiktok.com",
-                    "--no-check-certificate", // Avoid SSL issues
-                    "--extractor-retries", "3", // Increase extractor retries
-                    !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? "--cookies" : "--no-cache-dir",
-                    !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? cookiesPath : effectiveProxy.isEmpty() ? "" : effectiveProxy,
-                    "--print", "title", "--print", "thumbnail", tiktokUrl
-            );
+            List<String> command = new ArrayList<>();
+            command.add(ytDlpPath);
+            command.add("--user-agent");
+            command.add("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            command.add("--add-header");
+            command.add("Referer:https://www.tiktok.com/");
+            command.add("--add-header");
+            command.add("Origin:https://www.tiktok.com");
+            command.add("--no-check-certificate");
+            command.add("--extractor-retries");
+            command.add("3");
+
+            if (!cookiesPath.isEmpty() && !effectiveProxy.isEmpty()) {
+                command.add("--cookies");
+                command.add(cookiesPath);
+            } else if (!effectiveProxy.isEmpty()) {
+                command.add("--proxy");
+                command.add(effectiveProxy);
+            }
+
+            command.add("--print");
+            command.add("title");
+            command.add("--print");
+            command.add("thumbnail");
+            command.add(tiktokUrl);
+
+            ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
             Process process = null;
             try {

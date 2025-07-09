@@ -167,7 +167,6 @@ const TiktokDownloader = () => {
       handlePreview(decodedUrl);
     }
   }, [location, handlePreview]);
-
   return (
     <div className="main-center">
       <div className="tiktok-downloader-root">
