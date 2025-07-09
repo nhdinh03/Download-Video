@@ -1,4 +1,4 @@
-package Facebook.example.com.download_video;
+package Facebook.example.com;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
