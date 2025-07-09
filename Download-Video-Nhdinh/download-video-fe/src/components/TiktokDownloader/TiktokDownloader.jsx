@@ -11,8 +11,7 @@ import {
 } from "react-icons/fa";
 import "./TiktokDownloader.scss";
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE || "http://localhost:8081/api/tiktok";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8081/api/tiktok";
 
 const TiktokDownloader = () => {
   const [url, setUrl] = useState("");
@@ -60,7 +59,7 @@ const TiktokDownloader = () => {
         });
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Could not fetch video");
+          throw new Error(data.error || "Could not fetch video. Please try another URL or check your connection.");
         }
         setPreviewUrl(data.videoUrl);
         setVideoTitle(data.title || "Untitled");
@@ -68,7 +67,7 @@ const TiktokDownloader = () => {
           data.thumbnail || "https://via.placeholder.com/300x150?text=Thumbnail"
         );
       } catch (err) {
-        setError("Error: " + (err.message || "Could not fetch video"));
+        setError("Error: " + (err.message || "Could not fetch video. Please try again later."));
       } finally {
         setLoading((prev) => ({ ...prev, preview: false }));
       }
@@ -146,7 +145,7 @@ const TiktokDownloader = () => {
 
     eventSource.onerror = () => {
       if (progress < 100) {
-        setError("Lost server connection, retrying...");
+        setError("Lost server connection. Retrying...");
         eventSource.close();
         setTimeout(handleDownload, 2000);
       }
@@ -263,15 +262,14 @@ const TiktokDownloader = () => {
                   {videoTitle}
                 </div>
               )}
-              <img
-                src={thumbnail}
-                alt="Video thumbnail"
+              <video
+                src={previewUrl}
+                controls
                 className="tiktok-video-preview"
                 style={{ maxWidth: "100%" }}
+                poster={thumbnail}
                 onError={() =>
-                  setThumbnail(
-                    "https://via.placeholder.com/300x150?text=Thumbnail"
-                  )
+                  setError("Failed to load video preview. Try downloading instead.")
                 }
               />
               <a
@@ -280,7 +278,7 @@ const TiktokDownloader = () => {
                 rel="noopener noreferrer"
                 aria-label="View video on TikTok"
               >
-                View Video
+                View Video on TikTok
               </a>
             </div>
             <div className="tiktok-preview-col tiktok-preview-actions">
@@ -342,8 +340,8 @@ const TiktokDownloader = () => {
           <div className="tiktok-guide">
             <b>Guide:</b> Paste a TikTok video URL in the box above{" "}
             {isMobile && "(long press to paste)"}, then click{" "}
-            <b>Paste & Preview</b> → when the thumbnail appears, click{" "}
-            <b>Download Video</b>.
+            <b>Paste & Preview</b> → when the video preview appears, click{" "}
+            <b>Download Video</b>. If preview fails, try downloading directly.
           </div>
         )}
         <div className="tiktok-powered">

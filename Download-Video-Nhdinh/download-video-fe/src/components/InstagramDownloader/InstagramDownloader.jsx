@@ -42,38 +42,51 @@ export default function InstagramDownloader() {
   }, []);
 
   // Xem trước video
-  const handlePreview = useCallback(
-    async (inputUrl = url) => {
-      if (!inputUrl) return;
-      if (!isValidInstagramUrl(inputUrl)) {
-        setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
-        return;
-      }
-      setLoadingPreview(true);
-      setError("");
-      setSuccess("");
-      setPreviewUrl("");
-      setCopied(false);
-      setVideoTitle("");
-      try {
-        const res = await fetch(`${API_BASE}/preview`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: inputUrl }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.videoUrl)
-          throw new Error(data.error || "Không lấy được video");
-        setPreviewUrl(data.videoUrl);
-        setVideoTitle(data.title || "");
-      } catch (err) {
-        setError("Lỗi: " + (err?.message || "Không lấy được video"));
-      } finally {
-        setLoadingPreview(false);
-      }
-    },
-    [url, isValidInstagramUrl]
-  );
+const cleanInstagramUrl = (url) => {
+  // Remove query parameters and fragment (anything after '?')
+  const cleanedUrl = url.split('?')[0];
+  return cleanedUrl;
+};
+
+const handlePreview = useCallback(
+  async (inputUrl = url) => {
+    if (!inputUrl) return;
+    
+    // Clean the Instagram URL to remove query parameters
+    const cleanedUrl = cleanInstagramUrl(inputUrl);
+    
+    // Validate the cleaned URL
+    if (!isValidInstagramUrl(cleanedUrl)) {
+      setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
+      return;
+    }
+    
+    setLoadingPreview(true);
+    setError("");
+    setSuccess("");
+    setPreviewUrl("");
+    setCopied(false);
+    setVideoTitle("");
+    
+    try {
+      const res = await fetch(`${API_BASE}/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: cleanedUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.videoUrl) 
+        throw new Error(data.error || "Không lấy được video");
+      setPreviewUrl(data.videoUrl);
+      setVideoTitle(data.title || "");
+    } catch (err) {
+      setError("Lỗi: " + (err?.message || "Không lấy được video"));
+    } finally {
+      setLoadingPreview(false);
+    }
+  },
+  [url, isValidInstagramUrl]
+);
 
   // Tải video
   const handleDownload = useCallback(() => {

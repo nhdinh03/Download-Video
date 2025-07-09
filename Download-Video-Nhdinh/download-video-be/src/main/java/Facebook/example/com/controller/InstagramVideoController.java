@@ -39,11 +39,12 @@ public class InstagramVideoController {
         String instaUrl = payload.get("url");
         logger.info("Received preview request for URL: {}", instaUrl);
 
-        if (instaUrl == null || !instaUrl.matches("https?://(www\\.)?instagram\\.com/(p|reel|tv)/[a-zA-Z0-9_-]+/?")) {
+        if (instaUrl == null || !instaUrl.matches("https?://(www\\.)?instagram\\.com/reel/[a-zA-Z0-9_-]+(/|\\?[^\\s]*)?")) {
             logger.error("Invalid Instagram URL: {}", instaUrl);
             return ResponseEntity.badRequest().body(Map.of("error", "URL không hợp lệ."));
         }
 
+        // Process the URL using yt-dlp
         ProcessBuilder pb = new ProcessBuilder("yt-dlp", "-f", "best", "-g", "--get-title", instaUrl);
         pb.redirectErrorStream(true);
 
@@ -69,35 +70,21 @@ public class InstagramVideoController {
             logger.error("IOException when running yt-dlp: {}", e.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", "Lỗi hệ thống (không chạy được yt-dlp)."));
         }
+
         logger.info("yt-dlp exit code: {}", exit);
 
-        // Lấy directUrl là dòng đầu tiên chứa .mp4 và http
+        // Extract video URL and title from yt-dlp output
         String directUrl = outputLines.stream()
                 .filter(line -> line.contains(".mp4") && line.startsWith("http"))
                 .findFirst().orElse(null);
 
-        // Lấy title là dòng đầu tiên không phải warning, không phải hướng dẫn, không phải link mp4
-        // Lọc title siêu sạch:
         String videoTitle = outputLines.stream()
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
-                .filter(line
-                        -> !line.toLowerCase().contains("warning")
-                && !line.startsWith("To let yt-dlp")
-                && !line.startsWith("If you know what you are doing")
-                && !line.startsWith("To let yt-dlp download")
-                && !line.startsWith("If you want only the best")
-                && !line.startsWith("Simply do not pass any format")
-                && !line.contains(".mp4")
-                && !line.startsWith("http")
-                )
+                .filter(line -> !line.toLowerCase().contains("warning"))
                 .findFirst()
-                .orElse("")
+                .orElse("Instagram Video (không có tiêu đề)")
                 .trim();
-
-        if (videoTitle.isEmpty()) {
-            videoTitle = "Instagram Video (không có tiêu đề)";
-        }
 
         if (exit != 0 || directUrl == null) {
             logger.error("Failed to fetch preview for URL: {}. Output: {}", instaUrl, outputLines);
