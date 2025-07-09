@@ -42,7 +42,7 @@ const TiktokDownloader = () => {
   const handlePreview = useCallback(
     async (inputUrl = url) => {
       if (!inputUrl || !isValidTiktokUrl(inputUrl)) {
-        setError("Please enter a valid TikTok video URL!");
+        setError("Vui lòng nhập đúng link video TikTok!");
         setLoading((prev) => ({ ...prev, preview: false }));
         return;
       }
@@ -57,18 +57,16 @@ const TiktokDownloader = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: inputUrl }),
-          timeout: 10000,
+          signal: AbortSignal.timeout(10000),
         });
         data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Could not fetch video information.");
+          throw new Error(data.error || "Không thể lấy thông tin video.");
         }
-        setVideoTitle(data.title || "Untitled");
+        setVideoTitle(data.title || "Chưa có tiêu đề");
         setThumbnail(data.thumbnail || "");
       } catch (err) {
-        setError(
-          `Error: ${err.message || "Could not fetch video information."}`
-        );
+        setError(`Lỗi: ${err.message || "Không thể lấy thông tin video."}`);
         if (data && data.thumbnail) setThumbnail(data.thumbnail);
       } finally {
         setLoading((prev) => ({ ...prev, preview: false }));
@@ -79,7 +77,7 @@ const TiktokDownloader = () => {
 
   const handleDownload = useCallback(() => {
     if (!isValidTiktokUrl(url)) {
-      setError("Please enter a valid TikTok video URL!");
+      setError("Vui lòng nhập đúng link video TikTok!");
       return;
     }
     setLoading((prev) => ({ ...prev, download: true }));
@@ -99,15 +97,14 @@ const TiktokDownloader = () => {
       } else if (msg.startsWith("DONE_")) {
         const fileName = msg.replace("DONE_", "");
         setProgress(100);
-        setSuccess("Video is ready to download...");
+        setSuccess("Video đã sẵn sàng để tải xuống...");
         const tempLink = document.createElement("a");
-        // Assuming your server is serving the file, update the download URL accordingly
         tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(
           fileName
         )}`;
-        tempLink.download = fileName; // Assign the file name
+        tempLink.download = fileName;
         tempLink.click();
-        setSuccess("Video downloaded successfully!");
+        setSuccess("Tải video thành công!");
         setLoading((prev) => ({ ...prev, download: false }));
         eventSource.close();
       } else if (msg.startsWith("ERROR_")) {
@@ -118,7 +115,7 @@ const TiktokDownloader = () => {
         const fallbackUrl = msg.replace("FALLBACK_", "");
         window.open(fallbackUrl, "_blank");
         setSuccess(
-          "Server failed to download; opened TikTok URL for manual download."
+          "Máy chủ không tải được; đã mở link TikTok để tải thủ công."
         );
         setLoading((prev) => ({ ...prev, download: false }));
         eventSource.close();
@@ -127,7 +124,7 @@ const TiktokDownloader = () => {
 
     eventSource.onerror = () => {
       if (progress < 100) {
-        setError("Lost server connection. Retrying...");
+        setError("Mất kết nối máy chủ, đang thử lại...");
         eventSource.close();
         setTimeout(handleDownload, 2000);
       }
@@ -137,10 +134,10 @@ const TiktokDownloader = () => {
   const handleCopy = useCallback(() => {
     if (navigator.clipboard && url) {
       navigator.clipboard.writeText(url);
-      setSuccess("Link copied successfully!");
+      setSuccess("Link đã được sao chép!");
       setTimeout(() => setSuccess(""), 1500);
     } else {
-      setError("Unable to copy link!");
+      setError("Không thể sao chép link!");
     }
   }, [url]);
 
@@ -168,6 +165,7 @@ const TiktokDownloader = () => {
       handlePreview(decodedUrl);
     }
   }, [location, handlePreview]);
+
   return (
     <div className="main-center">
       <div className="tiktok-downloader-root">
@@ -183,7 +181,7 @@ const TiktokDownloader = () => {
                 className={`tiktok-input ${
                   url && !isValidTiktokUrl(url) ? "tiktok-input-error" : ""
                 }`}
-                placeholder="Paste TikTok video URL..."
+                placeholder="Dán link video TikTok..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handlePreview()}
@@ -202,8 +200,8 @@ const TiktokDownloader = () => {
                   } catch {
                     setError(
                       isMobile
-                        ? "Please paste manually!"
-                        : "Unable to read clipboard!"
+                        ? "Hãy dán thủ công!"
+                        : "Không thể đọc clipboard!"
                     );
                   }
                 }}
@@ -214,7 +212,7 @@ const TiktokDownloader = () => {
                 ) : (
                   <FaRegCopy />
                 )}
-                {loading.preview ? "Processing..." : "Paste & Preview"}
+                {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
               </button>
             </div>
           </>
@@ -238,7 +236,7 @@ const TiktokDownloader = () => {
               )}
               <img
                 src={thumbnail}
-                alt="Video thumbnail"
+                alt="Hình thu nhỏ video"
                 className="tiktok-video-preview"
                 style={{
                   maxWidth: "100%",
@@ -246,7 +244,7 @@ const TiktokDownloader = () => {
                   borderRadius: "8px",
                 }}
                 onError={() =>
-                  setError("Failed to load thumbnail. Try downloading instead.")
+                  setError("Không thể tải hình thu nhỏ. Hãy thử tải video.")
                 }
               />
             </div>
@@ -261,7 +259,7 @@ const TiktokDownloader = () => {
                 ) : (
                   <FaDownload />
                 )}
-                {loading.download ? "Downloading..." : "Lưu về máy"}
+                {loading.download ? "Đang tải..." : "Lưu về máy"}
               </button>
               <button
                 className="tiktok-btn tiktok-btn-copy"
@@ -304,10 +302,10 @@ const TiktokDownloader = () => {
         <br />
         {!thumbnail && (
           <div className="tiktok-guide">
-            <b>Guide:</b> Paste a TikTok video URL in the box above{" "}
-            {isMobile && "(long press to paste)"}, then click{" "}
-            <b>Paste & Preview</b> → when the thumbnail appears, click{" "}
-            <b>Lưu về máy</b>. If preview fails, try downloading directly.
+            <b>Hướng dẫn:</b> Dán link video TikTok vào ô trên{" "}
+            {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
+            → khi hình thu nhỏ hiện, bấm <b>Lưu về máy</b>. Nếu xem trước thất
+            bại, hãy thử tải trực tiếp.
           </div>
         )}
         <div className="tiktok-powered">
