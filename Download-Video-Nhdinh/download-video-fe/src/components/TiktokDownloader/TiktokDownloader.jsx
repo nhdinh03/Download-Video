@@ -24,7 +24,6 @@ const TiktokDownloader = () => {
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
   const location = useLocation();
-  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
   const isValidTiktokUrl = useCallback((input) => {
     try {
@@ -57,7 +56,6 @@ const TiktokDownloader = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: inputUrl }),
-          timeout: 10000,
         });
         data = await res.json();
         if (!res.ok) {
@@ -167,6 +165,7 @@ const TiktokDownloader = () => {
       handlePreview(decodedUrl);
     }
   }, [location, handlePreview]);
+
   return (
     <div className="main-center">
       <div className="tiktok-downloader-root">
@@ -199,11 +198,7 @@ const TiktokDownloader = () => {
                     setUrl(cleanedUrl);
                     handlePreview(cleanedUrl);
                   } catch {
-                    setError(
-                      isMobile
-                        ? "Please paste manually!"
-                        : "Unable to read clipboard!"
-                    );
+                    setError("Unable to read clipboard!");
                   }
                 }}
                 disabled={loading.preview}
@@ -223,30 +218,12 @@ const TiktokDownloader = () => {
           <div className="tiktok-preview-row">
             <div className="tiktok-preview-col tiktok-preview-video">
               {videoTitle && (
-                <div
-                  className="tiktok-video-title"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.12rem",
-                    marginBottom: 10,
-                    color: "#1b2535",
-                  }}
-                >
-                  {videoTitle}
-                </div>
+                <div className="tiktok-video-title">{videoTitle}</div>
               )}
               <img
                 src={thumbnail}
                 alt="Video thumbnail"
                 className="tiktok-video-preview"
-                style={{
-                  maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: "8px",
-                }}
-                onError={() =>
-                  setError("Failed to load thumbnail. Try downloading instead.")
-                }
               />
             </div>
             <div className="tiktok-preview-col tiktok-preview-actions">
@@ -301,18 +278,6 @@ const TiktokDownloader = () => {
           </div>
         )}
         <br />
-        {!thumbnail && (
-          <div className="tiktok-guide">
-            <b>Guide:</b> Paste a TikTok video URL in the box above{" "}
-            {isMobile && "(long press to paste)"}, then click{" "}
-            <b>Paste & Preview</b> → when the thumbnail appears, click{" "}
-            <b>Lưu về máy</b>. If preview fails, try downloading directly.
-          </div>
-        )}
-        <div className="tiktok-powered">
-          <br />© {new Date().getFullYear()} Nhdinh TikTok Video Downloader. All
-          rights reserved.
-        </div>
       </div>
     </div>
   );

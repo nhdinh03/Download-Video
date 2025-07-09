@@ -153,24 +153,20 @@ public class TiktokVideoController {
 
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadVideo(@RequestParam String filename) throws IOException {
-        if (filename == null || filename.length() > 255 || !filename.matches("[a-zA-Z0-9\\-\\.]+")) {
-            logger.warn("Invalid filename: {}", filename);
-            return ResponseEntity.badRequest().build();
-        }
+        // Use relative path or properly handle the file based on your server
         File file = new File(filename);
-        if (!file.exists() || !file.isFile()) {
+        if (!file.exists()) {
             logger.warn("File not found: {}", filename);
             return ResponseEntity.notFound().build();
         }
 
+        // Serve the file
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-        ResponseEntity<InputStreamResource> response = ResponseEntity.ok()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName())
                 .contentLength(file.length())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
-        file.delete();
-        return response;
     }
 
     @PostMapping("/preview")
