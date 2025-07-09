@@ -21,13 +21,17 @@ public class TiktokVideoUtil {
         }
 
         String outputPath = TEMP_DIR + File.separator + UUID.randomUUID() + ".mp4";
-        StringBuilder output = new StringBuilder(); // Moved outside try block to be in scope
+        StringBuilder output = new StringBuilder();
 
         ProcessBuilder pb = new ProcessBuilder(
-            ytDlpPath,
-            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            proxy.isEmpty() ? "--no-cache-dir" : "--proxy", proxy.isEmpty() ? "--newline" : proxy,
-            "--newline", "-f", "b", "-o", outputPath, tiktokUrl
+                ytDlpPath,
+                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "--add-header", "Referer:https://www.tiktok.com/",
+                "--add-header", "Origin:https://www.tiktok.com",
+                "--no-check-certificate",
+                "--ignore-config",
+                proxy.isEmpty() ? "--no-cache-dir" : "--proxy", proxy.isEmpty() ? "--newline" : proxy,
+                "--newline", "-f", "b", "-o", outputPath, tiktokUrl
         );
         pb.redirectErrorStream(true);
         Process process = pb.start();

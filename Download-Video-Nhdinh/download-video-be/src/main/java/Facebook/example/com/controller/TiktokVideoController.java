@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,8 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import Facebook.example.com.util.TiktokVideoUtil;
@@ -39,16 +34,12 @@ import jakarta.annotation.PreDestroy;
 
 @RestController
 @RequestMapping("/api/tiktok")
-@CrossOrigin(origins = "${tiktok.allowed.origins:http://localhost:3000}")
+@CrossOrigin(origins = "${tiktok.allowed.origins:*}")
 public class TiktokVideoController {
 
     private static final Logger logger = LoggerFactory.getLogger(TiktokVideoController.class);
-    private static final Set<String> PLAYABLE_CDN_DOMAINS = new HashSet<>(Arrays.asList(
-        "v16m.tiktokcdn.com", "v16m.tiktokcdn.com.akamaized.net",
-        "mpak-suse1.muscdn.com", "mphw-suse1.muscdn.com", "mpaw-suse1.muscdn.com"
-    ));
-    private static final Set<String> RESTRICTED_CDN_DOMAINS = new HashSet<>(Arrays.asList(
-        "v19.tiktokcdn.com", "v19-webapp-prime.tiktok.com"
+    private static final Set<String> ALLOWED_THUMBNAIL_DOMAINS = new HashSet<>(Arrays.asList(
+            "tiktokcdn.com", "muscdn.com"
     ));
 
     @Value("${tiktok.thread.pool.size:10}")
@@ -64,7 +55,6 @@ public class TiktokVideoController {
     private String cookiesPath;
 
     private final ExecutorService executorService;
-    private final RestTemplate restTemplate = new RestTemplate();
 
     public TiktokVideoController() {
         if (threadPoolSize <= 0) {
@@ -72,9 +62,9 @@ public class TiktokVideoController {
             threadPoolSize = 10;
         }
         this.executorService = new ThreadPoolExecutor(
-            threadPoolSize, threadPoolSize, 0L, TimeUnit.MILLISECONDS,
-            new java.util.concurrent.LinkedBlockingQueue<>(100),
-            new ThreadPoolExecutor.CallerRunsPolicy()
+                threadPoolSize, threadPoolSize, 0L, TimeUnit.MILLISECONDS,
+                new java.util.concurrent.LinkedBlockingQueue<>(100),
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
     }
 
@@ -83,35 +73,24 @@ public class TiktokVideoController {
             return false;
         }
         try {
-            new URI(proxy);
+            new java.net.URI(proxy);
             return true;
-        } catch (URISyntaxException e) {
+        } catch (java.net.URISyntaxException e) {
             logger.warn("Invalid proxy URL: {}, error: {}", proxy, e.getMessage());
             return false;
         }
     }
 
-    private String extractV16Url(String tiktokUrl) {
-        try {
-            String html = restTemplate.getForObject(tiktokUrl, String.class);
-            Pattern pattern = Pattern.compile("https://(?:v16m\\.tiktokcdn\\.com|v16m\\.tiktokcdn\\.com\\.akamaized\\.net|mp[ahw]-suse1\\.muscdn\\.com)[^\"]+");
-            Matcher matcher = pattern.matcher(html);
-            if (matcher.find()) {
-                return matcher.group();
-            }
-        } catch (Exception e) {
-            logger.error("Failed to extract v16 URL: {}, error: {}", tiktokUrl, e.getMessage());
+    private boolean isValidThumbnailUrl(String url) {
+        if (url == null || !url.startsWith("https://")) {
+            return false;
         }
-        return null;
-    }
-
-    private boolean isPlayableUrl(String url) {
-        if (url == null) return false;
         try {
-            String host = new URI(url).getHost();
-            return PLAYABLE_CDN_DOMAINS.stream().anyMatch(host::endsWith);
-        } catch (URISyntaxException e) {
-            logger.warn("Invalid URL format: {}, error: {}", url, e.getMessage());
+            java.net.URI uri = new java.net.URI(url);
+            String host = uri.getHost();
+            return host != null && ALLOWED_THUMBNAIL_DOMAINS.stream().anyMatch(host::endsWith);
+        } catch (java.net.URISyntaxException e) {
+            logger.warn("Invalid thumbnail URL: {}, error: {}", url, e.getMessage());
             return false;
         }
     }
@@ -193,8 +172,10 @@ public class TiktokVideoController {
     }
 
     @PostMapping("/preview")
-    public ResponseEntity<Map<String, String>> previewVideo(@RequestBody Map<String, String> payload) throws IOException {
+    public ResponseEntity<Map<String, String>> previewVideo(@RequestBody Map<String, String> payload) {
         String tiktokUrl = payload.get("url");
+        logger.info("Received preview request for URL: {}", tiktokUrl);
+
         if (tiktokUrl == null || tiktokUrl.length() > 2048 || !tiktokUrl.matches("https?://(www\\.)?(tiktok\\.com|vm\\.tiktok\\.com)/.*")) {
             logger.warn("Invalid TikTok URL: {}", tiktokUrl);
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid TikTok URL."));
@@ -202,55 +183,48 @@ public class TiktokVideoController {
 
         int retries = 3;
         String videoTitle = null;
-        String directUrl = null;
         String thumbnail = null;
         StringBuilder output = new StringBuilder();
         String effectiveProxy = isValidProxy(proxy) ? proxy : "";
 
         while (retries > 0) {
             ProcessBuilder pb = new ProcessBuilder(
-                ytDlpPath,
-                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                "--add-header", "Referer:https://www.tiktok.com/",
-                "--add-header", "Origin:https://www.tiktok.com",
-                !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? "--cookies" : "--no-cache-dir",
-                !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? cookiesPath : effectiveProxy.isEmpty() ? "--verbose" : effectiveProxy,
-                "--verbose", "-f", "b", "-g", "--get-title", "--get-thumbnail", tiktokUrl
+                    ytDlpPath,
+                    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    "--add-header", "Referer:https://www.tiktok.com/",
+                    "--add-header", "Origin:https://www.tiktok.com",
+                    "--no-check-certificate", // Avoid SSL issues
+                    "--extractor-retries", "3", // Increase extractor retries
+                    !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? "--cookies" : "--no-cache-dir",
+                    !effectiveProxy.isEmpty() && !cookiesPath.isEmpty() ? cookiesPath : effectiveProxy.isEmpty() ? "" : effectiveProxy,
+                    "--print", "title", "--print", "thumbnail", tiktokUrl
             );
             pb.redirectErrorStream(true);
             Process process = null;
             try {
+                logger.debug("Executing yt-dlp with command: {}", pb.command());
                 process = pb.start();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"))) {
-                    videoTitle = reader.readLine();
-                    directUrl = reader.readLine();
-                    thumbnail = reader.readLine();
                     String line;
                     while ((line = reader.readLine()) != null) {
                         output.append(line).append("\n");
-                        if (line.contains("ERROR")) {
-                            logger.error("yt-dlp error: {}", line);
+                        logger.debug("yt-dlp output: {}", line);
+                        if (line.startsWith("https://") && isValidThumbnailUrl(line)) {
+                            thumbnail = line;
+                            logger.info("Found valid thumbnail: {}", thumbnail);
+                        } else if (!line.startsWith("[") && !line.isEmpty() && !line.contains("ERROR") && videoTitle == null) {
+                            videoTitle = line;
+                            logger.info("Found video title: {}", videoTitle);
                         }
                     }
                 }
                 int exitCode = process.waitFor();
-                if (exitCode == 0 && directUrl != null) {
-                    if (isPlayableUrl(directUrl)) {
-                        return ResponseEntity.ok(Map.of(
-                            "videoUrl", directUrl,
+                logger.info("yt-dlp process completed with exit code: {}", exitCode);
+                if (exitCode == 0 && thumbnail != null && isValidThumbnailUrl(thumbnail)) {
+                    return ResponseEntity.ok(Map.of(
                             "title", videoTitle != null ? videoTitle : "Untitled",
-                            "thumbnail", thumbnail != null ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail"
-                        ));
-                    } else if (RESTRICTED_CDN_DOMAINS.stream().anyMatch(directUrl::contains)) {
-                        String v16Url = extractV16Url(tiktokUrl);
-                        if (v16Url != null) {
-                            return ResponseEntity.ok(Map.of(
-                                "videoUrl", v16Url,
-                                "title", videoTitle != null ? videoTitle : "Untitled",
-                                "thumbnail", thumbnail != null ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail"
-                            ));
-                        }
-                    }
+                            "thumbnail", thumbnail
+                    ));
                 }
                 logger.warn("yt-dlp attempt failed ({} retries left), exit code: {}, output: {}", retries - 1, exitCode, output.toString());
                 retries--;
@@ -261,7 +235,7 @@ public class TiktokVideoController {
                     Thread.sleep(1000);
                 }
             } catch (IOException e) {
-                logger.error("IO error executing yt-dlp: {}, output: {}", e.getMessage(), output.toString());
+                logger.error("IO error executing yt-dlp: {}, output: {}", e.getMessage(), output.toString(), e);
                 retries--;
                 if (retries == 2 && !effectiveProxy.isEmpty()) {
                     logger.info("Retrying without proxy due to proxy failure");
@@ -275,8 +249,18 @@ public class TiktokVideoController {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.error("Process interrupted: {}, output: {}", e.getMessage(), output.toString());
+                logger.error("Process interrupted: {}, output: {}", e.getMessage(), output.toString(), e);
                 retries = 0;
+            } catch (Exception e) {
+                logger.error("Unexpected error executing yt-dlp: {}, output: {}", e.getMessage(), output.toString(), e);
+                retries--;
+                if (retries > 0) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             } finally {
                 if (process != null) {
                     process.destroy();
@@ -286,10 +270,9 @@ public class TiktokVideoController {
 
         logger.error("All retries failed for URL: {}, output: {}", tiktokUrl, output.toString());
         return ResponseEntity.status(500).body(Map.of(
-            "error", "Failed to fetch a playable video URL. Video may be private, region-restricted, or blocked by TikTok.",
-            "thumbnail", thumbnail != null ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
-            "title", videoTitle != null ? videoTitle : "Untitled",
-            "videoUrl", tiktokUrl
+                "error", "Failed to fetch video information. Video may be private, region-restricted, or blocked by TikTok. Try downloading directly.",
+                "thumbnail", thumbnail != null && isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
+                "title", videoTitle != null ? videoTitle : "Untitled"
         ));
     }
 

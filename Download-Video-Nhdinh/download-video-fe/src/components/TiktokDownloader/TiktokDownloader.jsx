@@ -11,7 +11,8 @@ import {
 } from "react-icons/fa";
 import "./TiktokDownloader.scss";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8081/api/tiktok";
+const API_BASE =
+  process.env.REACT_APP_API_BASE || "http://localhost:8081/api/tiktok";
 
 const TiktokDownloader = () => {
   const [url, setUrl] = useState("");
@@ -19,9 +20,8 @@ const TiktokDownloader = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [videoTitle, setVideoTitle] = useState("");
   const [thumbnail, setThumbnail] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
   const location = useLocation();
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
@@ -43,31 +43,33 @@ const TiktokDownloader = () => {
     async (inputUrl = url) => {
       if (!inputUrl || !isValidTiktokUrl(inputUrl)) {
         setError("Please enter a valid TikTok video URL!");
+        setLoading((prev) => ({ ...prev, preview: false }));
         return;
       }
       setLoading((prev) => ({ ...prev, preview: true }));
       setError("");
       setSuccess("");
-      setPreviewUrl("");
-      setVideoTitle("");
       setThumbnail("");
+      setVideoTitle("");
+      let data = null;
       try {
         const res = await fetch(`${API_BASE}/preview`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: inputUrl }),
+          timeout: 10000,
         });
-        const data = await res.json();
+        data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Could not fetch video. Please try another URL or check your connection.");
+          throw new Error(data.error || "Could not fetch video information.");
         }
-        setPreviewUrl(data.videoUrl);
         setVideoTitle(data.title || "Untitled");
-        setThumbnail(
-          data.thumbnail || "https://via.placeholder.com/300x150?text=Thumbnail"
-        );
+        setThumbnail(data.thumbnail || "");
       } catch (err) {
-        setError("Error: " + (err.message || "Could not fetch video. Please try again later."));
+        setError(
+          `Error: ${err.message || "Could not fetch video information."}`
+        );
+        if (data && data.thumbnail) setThumbnail(data.thumbnail);
       } finally {
         setLoading((prev) => ({ ...prev, preview: false }));
       }
@@ -106,27 +108,6 @@ const TiktokDownloader = () => {
         tempLink.click();
         setSuccess("Video downloaded successfully!");
         setLoading((prev) => ({ ...prev, download: false }));
-
-        try {
-          const history = JSON.parse(
-            localStorage.getItem("downloadHistory") || "[]"
-          );
-          history.unshift({
-            id: Date.now(),
-            url,
-            title: videoTitle || "Untitled",
-            previewUrl,
-            thumbnail,
-            timestamp: new Date().toISOString(),
-            platform: "tiktok",
-          });
-          localStorage.setItem(
-            "downloadHistory",
-            JSON.stringify(history.slice(0, 50))
-          );
-        } catch {
-          setError("Failed to save download history");
-        }
         eventSource.close();
       } else if (msg.startsWith("ERROR_")) {
         setError(msg.replace("ERROR_", ""));
@@ -150,23 +131,22 @@ const TiktokDownloader = () => {
         setTimeout(handleDownload, 2000);
       }
     };
-  }, [url, isValidTiktokUrl, videoTitle, previewUrl, thumbnail, progress]);
+  }, [url, isValidTiktokUrl, progress]);
 
   const handleCopy = useCallback(() => {
-    if (navigator.clipboard && previewUrl) {
-      navigator.clipboard.writeText(previewUrl);
+    if (navigator.clipboard && url) {
+      navigator.clipboard.writeText(url);
       setSuccess("Link copied successfully!");
       setTimeout(() => setSuccess(""), 1500);
     } else {
       setError("Unable to copy link!");
     }
-  }, [previewUrl]);
+  }, [url]);
 
   const handleBack = () => {
     setUrl("");
-    setPreviewUrl("");
-    setVideoTitle("");
     setThumbnail("");
+    setVideoTitle("");
     setError("");
     setSuccess("");
     setProgress(0);
@@ -191,7 +171,7 @@ const TiktokDownloader = () => {
   return (
     <div className="main-center">
       <div className="tiktok-downloader-root">
-        {!previewUrl && (
+        {!thumbnail && (
           <>
             <div className="tiktok-header">
               <FaTiktok className="tiktok-logo" />
@@ -210,7 +190,6 @@ const TiktokDownloader = () => {
                 spellCheck={false}
                 autoFocus
                 autoComplete="off"
-                aria-label="Enter TikTok video URL"
               />
               <button
                 className="tiktok-btn tiktok-btn-preview"
@@ -229,11 +208,6 @@ const TiktokDownloader = () => {
                   }
                 }}
                 disabled={loading.preview}
-                aria-label={
-                  loading.preview
-                    ? "Processing preview"
-                    : "Paste and preview video"
-                }
               >
                 {loading.preview ? (
                   <FaSpinner className="tiktok-spin" />
@@ -246,7 +220,7 @@ const TiktokDownloader = () => {
           </>
         )}
 
-        {previewUrl && !loading.preview && (
+        {thumbnail && !loading.preview && (
           <div className="tiktok-preview-row">
             <div className="tiktok-preview-col tiktok-preview-video">
               {videoTitle && (
@@ -262,54 +236,46 @@ const TiktokDownloader = () => {
                   {videoTitle}
                 </div>
               )}
-              <video
-                src={previewUrl}
-                controls
+              <img
+                src={thumbnail}
+                alt="Video thumbnail"
                 className="tiktok-video-preview"
-                style={{ maxWidth: "100%" }}
-                poster={thumbnail}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  borderRadius: "8px",
+                }}
                 onError={() =>
-                  setError("Failed to load video preview. Try downloading instead.")
+                  setError("Failed to load thumbnail. Try downloading instead.")
                 }
               />
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View video on TikTok"
-              >
-                View Video on TikTok
-              </a>
             </div>
             <div className="tiktok-preview-col tiktok-preview-actions">
               <button
                 className="tiktok-btn tiktok-btn-download"
                 onClick={handleDownload}
                 disabled={loading.download}
-                aria-label="Download video"
               >
                 {loading.download ? (
                   <FaSpinner className="tiktok-spin" />
                 ) : (
                   <FaDownload />
                 )}
-                {loading.download ? "Downloading..." : "Download Video"}
+                {loading.download ? "Downloading..." : "Lưu về máy"}
               </button>
               <button
                 className="tiktok-btn tiktok-btn-copy"
                 onClick={handleCopy}
-                disabled={!previewUrl}
-                aria-label="Copy video link"
+                disabled={!url}
               >
                 <FaRegCopy />
-                Copy Link
+                Sao chép link
               </button>
               <button
                 className="tiktok-btn tiktok-btn-back"
                 onClick={handleBack}
-                aria-label="Go back"
               >
-                <FaArrowLeft /> Another Video
+                <FaArrowLeft /> Video khác
               </button>
             </div>
           </div>
@@ -336,12 +302,12 @@ const TiktokDownloader = () => {
           </div>
         )}
         <br />
-        {!previewUrl && (
+        {!thumbnail && (
           <div className="tiktok-guide">
             <b>Guide:</b> Paste a TikTok video URL in the box above{" "}
             {isMobile && "(long press to paste)"}, then click{" "}
-            <b>Paste & Preview</b> → when the video preview appears, click{" "}
-            <b>Download Video</b>. If preview fails, try downloading directly.
+            <b>Paste & Preview</b> → when the thumbnail appears, click{" "}
+            <b>Lưu về máy</b>. If preview fails, try downloading directly.
           </div>
         )}
         <div className="tiktok-powered">
