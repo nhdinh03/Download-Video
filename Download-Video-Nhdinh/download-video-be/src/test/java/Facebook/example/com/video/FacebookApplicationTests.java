@@ -1,4 +1,4 @@
-package Facebook.example.com.Facebook;
+package Facebook.example.com.video;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

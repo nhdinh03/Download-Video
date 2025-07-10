@@ -1,4 +1,4 @@
-package Facebook.example.com.controller;
+package video.example.com.controller;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import Facebook.example.com.util.FacebookVideoUtil;
+import video.example.com.util.FacebookVideoUtil;
 
 @RestController
 @RequestMapping("/api")
