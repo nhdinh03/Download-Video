@@ -28,7 +28,7 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     font-weight: 600;
     text-decoration: none;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1rem);
     transition: box-shadow 0.18s, background 0.16s, color 0.16s;
     box-shadow: 0 1px 5px $box-shadow-light;
 
@@ -40,7 +40,7 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
     }
 
     svg {
-      font-size: 1.3rem;
+      font-size: clamp(1.2rem, 3vw, 1.3rem);
     }
 
     &.coming-soon {
@@ -73,7 +73,7 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
   color: $toast-color;
   padding: 12px 28px;
   border-radius: 12px;
-  font-size: 1.08em;
+  font-size: clamp(0.9rem, 2vw, 1.08rem);
   font-weight: 500;
   z-index: 2002;
   box-shadow: 0 4px 28px 0 $toast-shadow;

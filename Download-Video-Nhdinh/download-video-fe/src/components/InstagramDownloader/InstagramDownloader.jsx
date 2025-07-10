@@ -28,7 +28,6 @@ export default function InstagramDownloader() {
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
 
-  // Kiểm tra URL Instagram hợp lệ, chỉ cho phép dạng Reel
   const isValidInstagramUrl = useCallback((input) => {
     try {
       const cleaned = decodeURIComponent(input.trim());
@@ -41,54 +40,49 @@ export default function InstagramDownloader() {
     }
   }, []);
 
-  // Xem trước video
-const cleanInstagramUrl = (url) => {
-  // Remove query parameters and fragment (anything after '?')
-  const cleanedUrl = url.split('?')[0];
-  return cleanedUrl;
-};
+  const cleanInstagramUrl = (url) => {
+    const cleanedUrl = url.split("?")[0];
+    return cleanedUrl;
+  };
 
-const handlePreview = useCallback(
-  async (inputUrl = url) => {
-    if (!inputUrl) return;
-    
-    // Clean the Instagram URL to remove query parameters
-    const cleanedUrl = cleanInstagramUrl(inputUrl);
-    
-    // Validate the cleaned URL
-    if (!isValidInstagramUrl(cleanedUrl)) {
-      setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
-      return;
-    }
-    
-    setLoadingPreview(true);
-    setError("");
-    setSuccess("");
-    setPreviewUrl("");
-    setCopied(false);
-    setVideoTitle("");
-    
-    try {
-      const res = await fetch(`${API_BASE}/preview`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: cleanedUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.videoUrl) 
-        throw new Error(data.error || "Không lấy được video");
-      setPreviewUrl(data.videoUrl);
-      setVideoTitle(data.title || "");
-    } catch (err) {
-      setError("Lỗi: " + (err?.message || "Không lấy được video"));
-    } finally {
-      setLoadingPreview(false);
-    }
-  },
-  [url, isValidInstagramUrl]
-);
+  const handlePreview = useCallback(
+    async (inputUrl = url) => {
+      if (!inputUrl) return;
 
-  // Tải video
+      const cleanedUrl = cleanInstagramUrl(inputUrl);
+
+      if (!isValidInstagramUrl(cleanedUrl)) {
+        setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
+        return;
+      }
+
+      setLoadingPreview(true);
+      setError("");
+      setSuccess("");
+      setPreviewUrl("");
+      setCopied(false);
+      setVideoTitle("");
+
+      try {
+        const res = await fetch(`${API_BASE}/preview`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: cleanedUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.videoUrl)
+          throw new Error(data.error || "Không lấy được video");
+        setPreviewUrl(data.videoUrl);
+        setVideoTitle(data.title || "");
+      } catch (err) {
+        setError("Lỗi: " + (err?.message || "Không lấy được video"));
+      } finally {
+        setLoadingPreview(false);
+      }
+    },
+    [url, isValidInstagramUrl]
+  );
+
   const handleDownload = useCallback(() => {
     if (!isValidInstagramUrl(url)) {
       setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
@@ -136,14 +130,12 @@ const handlePreview = useCallback(
     };
   }, [url, isValidInstagramUrl, progress]);
 
-  // Cleanup SSE khi component unmount
   useEffect(() => {
     return () => {
       if (sseRef.current) sseRef.current.close();
     };
   }, []);
 
-  // Quay lại/chọn video khác
   const handleBack = () => {
     setUrl("");
     setPreviewUrl("");
@@ -164,14 +156,18 @@ const handlePreview = useCallback(
             <div className="insta-header">
               <FaInstagram className="insta-logo" />
               <span className="insta-title">
-                Instagram Video <br className="hide-on-pc" /> Downloader
+                Instagram Video <span className="hide-on-pc"><br /></span> Downloader
               </span>
             </div>
             <div className="insta-input-group">
+              <label htmlFor="insta-url-input" className="sr-only">
+                Nhập link video Instagram
+              </label>
               <input
+                id="insta-url-input"
                 type="url"
-                className={`insta-input${
-                  url && !isValidInstagramUrl(url) ? " insta-input-error" : ""
+                className={`insta-input ${
+                  url && !isValidInstagramUrl(url) ? "insta-input-error" : ""
                 }`}
                 placeholder="Dán link video Instagram..."
                 value={url}
@@ -218,27 +214,14 @@ const handlePreview = useCallback(
           <div className="insta-preview-row">
             <div className="insta-preview-col insta-preview-video">
               {videoTitle && (
-                <div
-                  className="insta-video-title"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.12rem",
-                    marginBottom: 10,
-                    color: "#1b2535",
-                    opacity: videoTitle.includes("không có tiêu đề") ? 0.7 : 1,
-                  }}
-                >
-                  {videoTitle}
-                </div>
+                <div className="insta-video-title">{videoTitle}</div>
               )}
-
               <video
                 src={previewUrl}
                 controls
                 className="insta-video-preview"
               />
             </div>
-
             <div className="insta-preview-col insta-preview-actions">
               <button
                 className="insta-btn insta-btn-download"
@@ -281,7 +264,6 @@ const handlePreview = useCallback(
             <div className="insta-progress-label">{progress}%</div>
           </div>
         )}
-
         {(error || success) && (
           <div
             className={`insta-alert ${
@@ -293,7 +275,6 @@ const handlePreview = useCallback(
           </div>
         )}
         <br />
-
         {!previewUrl && (
           <div className="insta-guide">
             <b>Hướng dẫn:</b> Hãy dán link video Instagram vào ô trên{" "}
@@ -302,7 +283,6 @@ const handlePreview = useCallback(
             tải.
           </div>
         )}
-
         <div className="insta-powered">
           <br />© {new Date().getFullYear()} Instagram Video Downloader. All
           rights reserved.

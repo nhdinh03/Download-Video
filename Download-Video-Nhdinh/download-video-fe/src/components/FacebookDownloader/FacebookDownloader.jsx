@@ -192,11 +192,15 @@ const FacebookDownloader = () => {
             <div className="fb-header">
               <FaFacebook className="fb-logo" />
               <span className="fb-title">
-                Facebook Video <br className="hide-on-pc" /> Downloader
+                Facebook Video <span className="hide-on-pc"><br /></span> Downloader
               </span>
             </div>
             <div className="fb-input-group">
+              <label htmlFor="fb-url-input" className="sr-only">
+                Nhập link video Facebook
+              </label>
               <input
+                id="fb-url-input"
                 type="url"
                 className={`fb-input ${
                   url && !isValidFacebookUrl(url) ? "fb-input-error" : ""
@@ -242,17 +246,7 @@ const FacebookDownloader = () => {
           <div className="fb-preview-row">
             <div className="fb-preview-col fb-preview-video">
               {videoTitle && (
-                <div
-                  className="fb-video-title"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.12rem",
-                    marginBottom: 10,
-                    color: "#1b2535",
-                  }}
-                >
-                  {videoTitle}
-                </div>
+                <div className="fb-video-title">{videoTitle}</div>
               )}
               <video
                 src={previewUrl}

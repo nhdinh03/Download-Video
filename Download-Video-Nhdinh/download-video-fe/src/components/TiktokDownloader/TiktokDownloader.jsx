@@ -124,7 +124,7 @@ const TiktokDownloader = () => {
 
     eventSource.onerror = () => {
       if (progress < 100) {
-        setError("Mất kết nối máy chủ, đang thử lại...");
+        setError("Mất kết nối, đang thử lại...");
         eventSource.close();
         setTimeout(handleDownload, 2000);
       }
@@ -176,7 +176,11 @@ const TiktokDownloader = () => {
               <span className="tiktok-title">TikTok Video Downloader</span>
             </div>
             <div className="tiktok-input-group">
+              <label htmlFor="tiktok-url-input" className="sr-only">
+                Nhập link video TikTok
+              </label>
               <input
+                id="tiktok-url-input"
                 type="url"
                 className={`tiktok-input ${
                   url && !isValidTiktokUrl(url) ? "tiktok-input-error" : ""
@@ -222,27 +226,12 @@ const TiktokDownloader = () => {
           <div className="tiktok-preview-row">
             <div className="tiktok-preview-col tiktok-preview-video">
               {videoTitle && (
-                <div
-                  className="tiktok-video-title"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.12rem",
-                    marginBottom: 10,
-                    color: "#1b2535",
-                  }}
-                >
-                  {videoTitle}
-                </div>
+                <div className="tiktok-video-title">{videoTitle}</div>
               )}
               <img
                 src={thumbnail}
                 alt="Hình thu nhỏ video"
                 className="tiktok-video-preview"
-                style={{
-                  maxWidth: "100%",
-                  height: "auto",
-                  borderRadius: "8px",
-                }}
                 onError={() =>
                   setError("Không thể tải hình thu nhỏ. Hãy thử tải video.")
                 }
