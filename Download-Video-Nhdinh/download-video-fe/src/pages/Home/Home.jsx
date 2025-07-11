@@ -77,6 +77,7 @@ export default function Home() {
 
   useEffect(() => {
     document.body.classList.toggle("dark-mode", darkMode);
+    localStorage.setItem("darkMode", darkMode.toString());
   }, [darkMode]);
 
   const handleComingSoon = (name, e) => {
@@ -153,7 +154,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="home-footer">
+      {/* <footer className="home-footer">
         <div className="footer-container">
           <div className="footer-top">
             <span>© {new Date().getFullYear()} Nhđinh Video Downloader Pro - All rights reserved.</span>
@@ -173,7 +174,7 @@ export default function Home() {
             <span>Built with ❤️ by Nhđinh Team</span>
           </div>
         </div>
-      </footer>
+      </footer> */}
 
       {toast && (
         <div className="toast-coming-soon" role="alert" aria-live="polite">

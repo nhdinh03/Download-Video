@@ -89,7 +89,7 @@ function DownloaderMenu() {
 
   return (
     <>
-      <nav className="downloader-menu">
+      <nav className="downloader-menu" >
         {platforms.map((p) =>
           p.active ? (
             <Link

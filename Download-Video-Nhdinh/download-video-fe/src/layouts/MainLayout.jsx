@@ -1,14 +1,14 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DownloaderMenu from "../components/DownloaderMenu/DownloaderMenu";
 import "./MainLayout.scss";
 import { Link, useLocation } from "react-router-dom";
+import { FaMoon, FaSun } from "react-icons/fa";
 
 export default function MainLayout({ children }) {
   const location = useLocation();
-  
+
   return (
     <div className="main-layout">
-      {/* Modern sticky header with improved navigation */}
       <header className="main-header">
         <div className="header-container">
           <div className="header-content">
@@ -17,7 +17,7 @@ export default function MainLayout({ children }) {
               <span className="logo-secondary">Video Downloader</span>
               <span className="logo-accent">Pro</span>
             </Link>
-            
+
             <nav className="main-nav">
               <NavLink to="/" currentPath={location.pathname}>
                 Home
@@ -30,26 +30,31 @@ export default function MainLayout({ children }) {
               </NavLink>
             </nav>
           </div>
-          
+
           <DownloaderMenu />
         </div>
       </header>
 
       <main className="main-content">
-        <div className="content-container">
-          {children}
-        </div>
+        <div className="content-container">{children}</div>
       </main>
 
       <footer className="main-footer">
         <div className="footer-content">
           <div className="footer-links">
-            <a href="/privacy" className="footer-link">Privacy Policy</a>
-            <a href="/terms" className="footer-link">Terms of Service</a>
-            <a href="/contact" className="footer-link">Contact</a>
+            <a href="/privacy" className="footer-link">
+              Privacy Policy
+            </a>
+            <a href="/terms" className="footer-link">
+              Terms of Service
+            </a>
+            <a href="/contact" className="footer-link">
+              Contact
+            </a>
           </div>
           <div className="copyright">
-            © {new Date().getFullYear()} Nhdinh Video Downloader Pro. All rights reserved.
+            © {new Date().getFullYear()} Nhdinh Video Downloader Pro. All rights
+            reserved.
           </div>
         </div>
       </footer>
@@ -57,14 +62,13 @@ export default function MainLayout({ children }) {
   );
 }
 
-// Reusable NavLink component for better consistency
 function NavLink({ to, currentPath, children }) {
   const isActive = currentPath === to;
   return (
     <Link
       to={to}
-      className={`nav-link ${isActive ? 'active' : ''}`}
-      aria-current={isActive ? 'page' : undefined}
+      className={`nav-link ${isActive ? "active" : ""}`}
+      aria-current={isActive ? "page" : undefined}
     >
       {children}
       {isActive && <span className="active-indicator" aria-hidden="true" />}
