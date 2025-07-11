@@ -7,6 +7,8 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaArrowLeft,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import "./InstagramDownloader.scss";
 
@@ -16,7 +18,9 @@ const API_BASE =
     ? `http://${window.location.hostname}:8081/api/instagram`
     : "https://your-production-domain.com/api/instagram";
 
-export default function InstagramDownloader() {
+
+
+  const InstagramDownloader = () => {
   const [url, setUrl] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
@@ -26,7 +30,11 @@ export default function InstagramDownloader() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
   const sseRef = useRef(null);
+  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
   const isValidInstagramUrl = useCallback((input) => {
     try {
@@ -130,11 +138,15 @@ export default function InstagramDownloader() {
     };
   }, [url, isValidInstagramUrl, progress]);
 
-  useEffect(() => {
-    return () => {
-      if (sseRef.current) sseRef.current.close();
-    };
-  }, []);
+  const handleCopy = useCallback(() => {
+    if (navigator.clipboard && previewUrl) {
+      navigator.clipboard.writeText(previewUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } else {
+      setError("Không thể sao chép link!");
+    }
+  }, [previewUrl]);
 
   const handleBack = () => {
     setUrl("");
@@ -146,68 +158,94 @@ export default function InstagramDownloader() {
     setVideoTitle("");
   };
 
-  const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("darkMode", newMode.toString());
+      document.body.classList.toggle("dark-mode", newMode);
+      return newMode;
+    });
+  };
+
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
+    return () => {
+      if (sseRef.current) sseRef.current.close();
+    };
+  }, [darkMode]);
 
   return (
     <div className="main-center">
       <div className="insta-downloader-root">
+        <div className="header-row">
+          <div className="insta-header">
+            <FaInstagram className="insta-logo" />
+            <span className="insta-title">
+              Instagram Video{" "}
+              <span className="hide-on-pc">
+                <br />
+              </span>{" "}
+              Downloader
+            </span>
+          </div>
+          <button
+            className="dark-mode-toggle"
+            onClick={toggleDarkMode}
+            aria-label={darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+          >
+            {darkMode ? <FaSun /> : <FaMoon />}
+          </button>
+        </div>
+
         {!previewUrl && (
-          <>
-            <div className="insta-header">
-              <FaInstagram className="insta-logo" />
-              <span className="insta-title">
-                Instagram Video <span className="hide-on-pc"><br /></span> Downloader
-              </span>
-            </div>
-            <div className="insta-input-group">
-              <label htmlFor="insta-url-input" className="sr-only">
-                Nhập link video Instagram
-              </label>
-              <input
-                id="insta-url-input"
-                type="url"
-                className={`insta-input ${
-                  url && !isValidInstagramUrl(url) ? "insta-input-error" : ""
-                }`}
-                placeholder="Dán link video Instagram..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handlePreview(url);
-                }}
-                spellCheck={false}
-                autoFocus
-                autoComplete="off"
-              />
-              <button
-                className="insta-btn insta-btn-preview"
-                onClick={async () => {
-                  try {
-                    if (!navigator.clipboard)
-                      throw new Error("Clipboard API không khả dụng.");
-                    const clipboardText = await navigator.clipboard.readText();
-                    const cleanedUrl = clipboardText.trim();
-                    setUrl(cleanedUrl);
-                    handlePreview(cleanedUrl);
-                  } catch (err) {
-                    setError(
-                      isMobile
-                        ? "Không thể tự động dán từ clipboard, hãy dán thủ công!"
-                        : "Không thể đọc clipboard. Hãy thử lại hoặc tự dán link!"
-                    );
-                  }
-                }}
-                disabled={loadingPreview}
-              >
-                {loadingPreview ? (
-                  <FaSpinner className="insta-spin" />
-                ) : (
-                  <FaRegCopy />
-                )}
-                {loadingPreview ? "Đang xử lý..." : "Dán & Xem trước"}
-              </button>
-            </div>
-          </>
+          <div className="insta-input-group">
+            <label htmlFor="insta-url-input" className="sr-only">
+              Nhập link video Instagram
+            </label>
+            <input
+              id="insta-url-input"
+              type="url"
+              className={`insta-input ${
+                url && !isValidInstagramUrl(url) ? "insta-input-error" : ""
+              }`}
+              placeholder="Dán link video Instagram..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handlePreview(url);
+              }}
+              spellCheck={false}
+              autoFocus
+              autoComplete="off"
+            />
+            <button
+              className="insta-btn insta-btn-preview"
+              onClick={async () => {
+                try {
+                  if (!navigator.clipboard)
+                    throw new Error("Clipboard API không khả dụng.");
+                  const clipboardText = await navigator.clipboard.readText();
+                  const cleanedUrl = clipboardText.trim();
+                  setUrl(cleanedUrl);
+                  handlePreview(cleanedUrl);
+                } catch (err) {
+                  setError(
+                    isMobile
+                      ? "Không thể tự động dán từ clipboard, hãy dán thủ công!"
+                      : "Không thể đọc clipboard. Hãy thử lại hoặc tự dán link!"
+                  );
+                }
+              }}
+              disabled={loadingPreview}
+            >
+              {loadingPreview ? (
+                <FaSpinner className="insta-spin" />
+              ) : (
+                <FaRegCopy />
+              )}
+              {loadingPreview ? "Đang xử lý..." : "Dán & Xem trước"}
+            </button>
+          </div>
         )}
 
         {previewUrl && (
@@ -237,14 +275,10 @@ export default function InstagramDownloader() {
               </button>
               <button
                 className="insta-btn insta-btn-copy"
-                onClick={() => {
-                  navigator.clipboard.writeText(previewUrl);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                }}
+                onClick={handleCopy}
                 disabled={copied}
               >
-                {copied ? <FaCheckCircle color="#43a047" /> : <FaRegCopy />}
+                {copied ? <FaCheckCircle /> : <FaRegCopy />}
                 {copied ? "Đã copy link" : "Copy link"}
               </button>
               <button className="insta-btn insta-btn-back" onClick={handleBack}>
@@ -253,6 +287,7 @@ export default function InstagramDownloader() {
             </div>
           </div>
         )}
+
         {loadingDownload && (
           <div className="insta-progress-wrap">
             <div className="insta-progress-bar-bg">
@@ -264,6 +299,7 @@ export default function InstagramDownloader() {
             <div className="insta-progress-label">{progress}%</div>
           </div>
         )}
+
         {(error || success) && (
           <div
             className={`insta-alert ${
@@ -274,6 +310,7 @@ export default function InstagramDownloader() {
             {success || error}
           </div>
         )}
+
         <br />
         {!previewUrl && (
           <div className="insta-guide">
@@ -283,11 +320,13 @@ export default function InstagramDownloader() {
             tải.
           </div>
         )}
+
         <div className="insta-powered">
-          <br />© {new Date().getFullYear()} Instagram Video Downloader. All
-          rights reserved.
+          © {new Date().getFullYear()} Instagram Video Downloader. All rights
+          reserved.
         </div>
       </div>
     </div>
   );
 }
+export default InstagramDownloader;

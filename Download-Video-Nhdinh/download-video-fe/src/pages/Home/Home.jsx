@@ -64,7 +64,7 @@ const platforms = [
   },
 ];
 
-export default function Home() {
+function Home() {
   const [toast, setToast] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
@@ -184,3 +184,4 @@ export default function Home() {
     </div>
   );
 }
+export default Home;

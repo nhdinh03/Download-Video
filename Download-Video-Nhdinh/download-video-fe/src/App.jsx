@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import Home from "./pages/Home/Home";
 
+import FacebookDownloader from "./components/FacebookDownloader/FacebookDownloader";
 import InstagramDownloader from "./components/InstagramDownloader/InstagramDownloader";
 import TiktokDownloader from "./components/TiktokDownloader/TiktokDownloader";
 import TwitterDownloader from "./components/TwitterDownloader/TwitterDownloader";
@@ -10,7 +11,7 @@ import YoutubeDownloader from "./components/YoutubeDownloader/YoutubeDownloader"
 import Downloadhistory from "./pages/DownloadHistory/downloadhistory";
 import NotFound from "./pages/NotFound/NotFound";
 import Guide from "./pages/Guide/Guide";
-import FacebookDownloader from "./components/FacebookDownloader/FacebookDownloader";
+
 
 function App() {
   return (

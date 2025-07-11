@@ -8,6 +8,8 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaArrowLeft,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import "./TiktokDownloader.scss";
 
@@ -22,6 +24,9 @@ const TiktokDownloader = () => {
   const [success, setSuccess] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
   const sseRef = useRef(null);
   const location = useLocation();
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
@@ -150,11 +155,21 @@ const TiktokDownloader = () => {
     setProgress(0);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("darkMode", newMode.toString());
+      document.body.classList.toggle("dark-mode", newMode);
+      return newMode;
+    });
+  };
+
   useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
     return () => {
       if (sseRef.current) sseRef.current.close();
     };
-  }, []);
+  }, [darkMode]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -169,57 +184,65 @@ const TiktokDownloader = () => {
   return (
     <div className="main-center">
       <div className="tiktok-downloader-root">
+        <div className="header-row">
+          <div className="tiktok-header">
+            <FaTiktok className="tiktok-logo" />
+            <span className="tiktok-title">TikTok Video Downloader</span>
+          </div>
+          <button
+            className="dark-mode-toggle"
+            onClick={toggleDarkMode}
+            aria-label={
+              darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"
+            }
+          >
+            {darkMode ? <FaSun /> : <FaMoon />}
+          </button>
+        </div>
+
         {!thumbnail && (
-          <>
-            <div className="tiktok-header">
-              <FaTiktok className="tiktok-logo" />
-              <span className="tiktok-title">TikTok Video Downloader</span>
-            </div>
-            <div className="tiktok-input-group">
-              <label htmlFor="tiktok-url-input" className="sr-only">
-                Nhập link video TikTok
-              </label>
-              <input
-                id="tiktok-url-input"
-                type="url"
-                className={`tiktok-input ${
-                  url && !isValidTiktokUrl(url) ? "tiktok-input-error" : ""
-                }`}
-                placeholder="Dán link video TikTok..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePreview()}
-                spellCheck={false}
-                autoFocus
-                autoComplete="off"
-              />
-              <button
-                className="tiktok-btn tiktok-btn-preview"
-                onClick={async () => {
-                  try {
-                    const clipboardText = await navigator.clipboard.readText();
-                    const cleanedUrl = clipboardText.trim();
-                    setUrl(cleanedUrl);
-                    handlePreview(cleanedUrl);
-                  } catch {
-                    setError(
-                      isMobile
-                        ? "Hãy dán thủ công!"
-                        : "Không thể đọc clipboard!"
-                    );
-                  }
-                }}
-                disabled={loading.preview}
-              >
-                {loading.preview ? (
-                  <FaSpinner className="tiktok-spin" />
-                ) : (
-                  <FaRegCopy />
-                )}
-                {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
-              </button>
-            </div>
-          </>
+          <div className="tiktok-input-group">
+            <label htmlFor="tiktok-url-input" className="sr-only">
+              Nhập link video TikTok
+            </label>
+            <input
+              id="tiktok-url-input"
+              type="url"
+              className={`tiktok-input ${
+                url && !isValidTiktokUrl(url) ? "tiktok-input-error" : ""
+              }`}
+              placeholder="Dán link video TikTok..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePreview()}
+              spellCheck={false}
+              autoFocus
+              autoComplete="off"
+            />
+            <button
+              className="tiktok-btn tiktok-btn-preview"
+              onClick={async () => {
+                try {
+                  const clipboardText = await navigator.clipboard.readText();
+                  const cleanedUrl = clipboardText.trim();
+                  setUrl(cleanedUrl);
+                  handlePreview(cleanedUrl);
+                } catch {
+                  setError(
+                    isMobile ? "Hãy dán thủ công!" : "Không thể đọc clipboard!"
+                  );
+                }
+              }}
+              disabled={loading.preview}
+            >
+              {loading.preview ? (
+                <FaSpinner className="tiktok-spin" />
+              ) : (
+                <FaRegCopy />
+              )}
+              {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
+            </button>
+          </div>
         )}
 
         {thumbnail && !loading.preview && (
@@ -267,6 +290,7 @@ const TiktokDownloader = () => {
             </div>
           </div>
         )}
+
         {loading.download && (
           <div className="tiktok-progress-wrap">
             <div className="tiktok-progress-bar-bg">
@@ -278,6 +302,7 @@ const TiktokDownloader = () => {
             <div className="tiktok-progress-label">{progress}%</div>
           </div>
         )}
+
         {(error || success) && (
           <div
             className={`tiktok-alert ${
@@ -288,6 +313,7 @@ const TiktokDownloader = () => {
             {success || error}
           </div>
         )}
+
         <br />
         {!thumbnail && (
           <div className="tiktok-guide">
@@ -297,8 +323,9 @@ const TiktokDownloader = () => {
             bại, hãy thử tải trực tiếp.
           </div>
         )}
+
         <div className="tiktok-powered">
-          <br />© {new Date().getFullYear()} Nhdinh TikTok Video Downloader. All
+          © {new Date().getFullYear()} Nhdinh TikTok Video Downloader. All
           rights reserved.
         </div>
       </div>

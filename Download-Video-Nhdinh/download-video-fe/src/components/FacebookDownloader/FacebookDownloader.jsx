@@ -8,6 +8,8 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaArrowLeft,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import "./FacebookDownloader.scss";
 
@@ -25,6 +27,9 @@ const FacebookDownloader = () => {
   const [success, setSuccess] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
   const sseRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -165,11 +170,21 @@ const FacebookDownloader = () => {
     setProgress(0);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("darkMode", newMode.toString());
+      document.body.classList.toggle("dark-mode", newMode);
+      return newMode;
+    });
+  };
+
   useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
     return () => {
       if (sseRef.current) sseRef.current.close();
     };
-  }, []);
+  }, [darkMode]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -187,67 +202,77 @@ const FacebookDownloader = () => {
   return (
     <div className="main-center">
       <div className="fb-downloader-root">
+        <div className="header-row">
+          <div className="fb-header">
+            <FaFacebook className="fb-logo" />
+            <span className="fb-title">
+              Facebook Video{" "}
+              <span className="hide-on-pc">
+                <br />
+              </span>{" "}
+              Downloader
+            </span>
+          </div>
+          <button
+            className="dark-mode-toggle"
+            onClick={toggleDarkMode}
+            aria-label={
+              darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"
+            }
+          >
+            {darkMode ? <FaSun /> : <FaMoon />}
+          </button>
+        </div>
+
         {!previewUrl && (
-          <>
-            <div className="fb-header">
-              <FaFacebook className="fb-logo" />
-              <span className="fb-title">
-                Facebook Video <span className="hide-on-pc"><br /></span> Downloader
-              </span>
-            </div>
-            <div className="fb-input-group">
-              <label htmlFor="fb-url-input" className="sr-only">
-                Nhập link video Facebook
-              </label>
-              <input
-                id="fb-url-input"
-                type="url"
-                className={`fb-input ${
-                  url && !isValidFacebookUrl(url) ? "fb-input-error" : ""
-                }`}
-                placeholder="Dán link video Facebook..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePreview()}
-                spellCheck={false}
-                autoFocus
-                autoComplete="off"
-              />
-              <button
-                className="fb-btn fb-btn-preview"
-                onClick={async () => {
-                  try {
-                    const clipboardText = await navigator.clipboard.readText();
-                    const cleanedUrl = clipboardText.trim();
-                    setUrl(cleanedUrl);
-                    handlePreview(cleanedUrl);
-                  } catch {
-                    setError(
-                      isMobile
-                        ? "Hãy dán thủ công!"
-                        : "Không thể đọc clipboard!"
-                    );
-                  }
-                }}
-                disabled={loading.preview}
-              >
-                {loading.preview ? (
-                  <FaSpinner className="fb-spin" />
-                ) : (
-                  <FaRegCopy />
-                )}
-                {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
-              </button>
-            </div>
-          </>
+          <div className="fb-input-group">
+            <label htmlFor="fb-url-input" className="sr-only">
+              Nhập link video Facebook
+            </label>
+            <input
+              id="fb-url-input"
+              type="url"
+              className={`fb-input ${
+                url && !isValidFacebookUrl(url) ? "fb-input-error" : ""
+              }`}
+              placeholder="Dán link video Facebook..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePreview()}
+              spellCheck={false}
+              autoFocus
+              autoComplete="off"
+            />
+            <button
+              className="fb-btn fb-btn-preview"
+              onClick={async () => {
+                try {
+                  const clipboardText = await navigator.clipboard.readText();
+                  const cleanedUrl = clipboardText.trim();
+                  setUrl(cleanedUrl);
+                  handlePreview(cleanedUrl);
+                } catch {
+                  setError(
+                    isMobile ? "Hãy dán thủ công!" : "Không thể đọc clipboard!"
+                  );
+                }
+              }}
+              disabled={loading.preview}
+            >
+              {loading.preview ? (
+                <FaSpinner className="fb-spin" />
+              ) : (
+                <FaRegCopy />
+              )}
+              {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
+            </button>
+          </div>
         )}
 
         {previewUrl && !loading.preview && (
           <div className="fb-preview-row">
             <div className="fb-preview-col fb-preview-video">
-              {videoTitle && (
-                <div className="fb-video-title">{videoTitle}</div>
-              )}
+              {videoTitle && <div className="fb-video-title">{videoTitle}</div>}
               <video
                 src={previewUrl}
                 controls
@@ -283,6 +308,7 @@ const FacebookDownloader = () => {
             </div>
           </div>
         )}
+
         {loading.download && (
           <div className="fb-progress-wrap">
             <div className="fb-progress-bar-bg">
@@ -294,6 +320,7 @@ const FacebookDownloader = () => {
             <div className="fb-progress-label">{progress}%</div>
           </div>
         )}
+
         {(error || success) && (
           <div
             className={`fb-alert ${
@@ -304,6 +331,7 @@ const FacebookDownloader = () => {
             {success || error}
           </div>
         )}
+
         <br />
         {!previewUrl && (
           <div className="fb-guide">
@@ -312,9 +340,10 @@ const FacebookDownloader = () => {
             → khi video hiện, bấm <b>Lưu về máy</b>.
           </div>
         )}
+
         <div className="fb-powered">
-          <br />© {new Date().getFullYear()} Nhdinh Facebook Video Downloader.
-          All rights reserved.
+          © {new Date().getFullYear()} Nhdinh Facebook Video Downloader. All
+          rights reserved.
         </div>
       </div>
     </div>
