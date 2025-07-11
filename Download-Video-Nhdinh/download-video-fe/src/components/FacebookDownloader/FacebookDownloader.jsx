@@ -27,9 +27,6 @@ const FacebookDownloader = () => {
   const [success, setSuccess] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("darkMode") === "true";
-  });
   const sseRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -170,22 +167,6 @@ const FacebookDownloader = () => {
     setProgress(0);
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const newMode = !prev;
-      localStorage.setItem("darkMode", newMode.toString());
-      document.body.classList.toggle("dark-mode", newMode);
-      return newMode;
-    });
-  };
-
-  useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
-    return () => {
-      if (sseRef.current) sseRef.current.close();
-    };
-  }, [darkMode]);
-
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const urlFromQuery = params.get("url");
@@ -213,15 +194,6 @@ const FacebookDownloader = () => {
               Downloader
             </span>
           </div>
-          <button
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            aria-label={
-              darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"
-            }
-          >
-            {darkMode ? <FaSun /> : <FaMoon />}
-          </button>
         </div>
 
         {!previewUrl && (

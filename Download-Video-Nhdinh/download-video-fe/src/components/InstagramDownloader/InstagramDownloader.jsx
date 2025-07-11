@@ -30,9 +30,7 @@ const API_BASE =
   const [previewUrl, setPreviewUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("darkMode") === "true";
-  });
+
   const sseRef = useRef(null);
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
@@ -158,21 +156,7 @@ const API_BASE =
     setVideoTitle("");
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const newMode = !prev;
-      localStorage.setItem("darkMode", newMode.toString());
-      document.body.classList.toggle("dark-mode", newMode);
-      return newMode;
-    });
-  };
 
-  useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
-    return () => {
-      if (sseRef.current) sseRef.current.close();
-    };
-  }, [darkMode]);
 
   return (
     <div className="main-center">
@@ -188,13 +172,7 @@ const API_BASE =
               Downloader
             </span>
           </div>
-          <button
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-          >
-            {darkMode ? <FaSun /> : <FaMoon />}
-          </button>
+
         </div>
 
         {!previewUrl && (
