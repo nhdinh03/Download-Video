@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   FaFacebook,
   FaInstagram,
@@ -7,6 +7,9 @@ import {
   FaTiktok,
   FaTwitter,
   FaAt,
+  FaDownload,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import "./Home.scss";
 
@@ -14,146 +17,166 @@ const platforms = [
   {
     name: "Facebook",
     path: "/download/facebook",
-    icon: <FaFacebook color="#1877f3" />,
-    desc: "Tải video Facebook tốc độ cao.",
+    icon: <FaFacebook />,
+    desc: "Tải video Facebook tốc độ cao, chất lượng HD.",
     active: true,
+    color: "#1877f3"
   },
   {
     name: "Instagram",
     path: "/download/instagram",
-    icon: <FaInstagram color="#E1306C" />,
-    desc: "Tải video Instagram tốc độ cao.",
+    icon: <FaInstagram />,
+    desc: "Tải video, reels và stories từ Instagram.",
     active: true,
+    color: "#E1306C"
   },
   {
-    name: "Youtube",
-    path: "/download/youtube",
-    icon: <FaYoutube color="#ff0000" />,
-    desc: "Đang phát triển...",
-    active: false,
+    name: "TikTok",
+    path: "/download/tiktok",
+    icon: <FaTiktok />,
+    desc: "Tải video TikTok không watermark, nhanh chóng.",
+    active: true,
+    color: "#000"
   },
   {
     name: "Threads",
     path: "/download/threads",
-    icon: <FaAt color="#222" />,
-    desc: "Đang phát triển...",
+    icon: <FaAt />,
+    desc: "Đang phát triển hỗ trợ tải từ Threads.",
     active: false,
-  },
-  {
-    name: "Tiktok",
-    path: "/download/tiktok",
-    icon: <FaTiktok color="#222" />,
-    desc: "Tải video TikTok tốc độ cao.",
-    active: true,
+    color: "#222"
   },
   {
     name: "Twitter",
     path: "/download/twitter",
-    icon: <FaTwitter color="#1da1f2" />,
-    desc: "Đang phát triển...",
+    icon: <FaTwitter />,
+    desc: "Đang phát triển tải video từ Twitter/X.",
     active: false,
+    color: "#1da1f2"
+  },
+  {
+    name: "Youtube",
+    path: "/download/youtube",
+    icon: <FaYoutube />,
+    desc: "Đang phát triển tính năng tải video YouTube.",
+    active: false,
+    color: "#ff0000"
   },
 ];
 
 export default function Home() {
-  const location = useLocation();
   const [toast, setToast] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     if (toast) {
-      const t = setTimeout(() => setToast(""), 2200);
+      const t = setTimeout(() => setToast(""), 3000);
       return () => clearTimeout(t);
     }
   }, [toast]);
 
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
+  }, [darkMode]);
+
   const handleComingSoon = (name, e) => {
     e.preventDefault();
-    setToast(`"${name}" đang được phát triển. Quay lại sau nhé!`);
+    setToast(`"${name}" đang được phát triển. Hãy quay lại sau nhé!`);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
   };
 
   return (
     <div className="home-root">
       <header className="home-header">
-        <span className="home-logo">
-          <FaFacebook /> Nhdinh Downloader Pro
-        </span>
-        <nav>
-          <Link to="/" className={location.pathname === "/" ? "active" : ""} aria-label="Trang chủ">
-            Home
-          </Link>
-          <Link to="/guide" className={location.pathname === "/guide" ? "active" : ""} aria-label="Hướng dẫn sử dụng">
-            Hướng dẫn
-          </Link>
-          <Link
-            to="/download/history"
-            className={location.pathname === "/download/history" ? "active" : ""}
-            aria-label="Lịch sử tải về"
+        <div className="header-container">
+          <span className="home-logo">
+            <span className="logo-icon"><FaDownload /></span>
+            <span className="logo-text">Nhđinh Video Downloader Pro</span>
+          </span>
+  
+          <button
+            className="dark-mode-toggle"
+            onClick={toggleDarkMode}
+            aria-label={darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
           >
-            Lịch sử tải về
-          </Link>
-        </nav>
+            {darkMode ? <FaSun /> : <FaMoon />}
+          </button>
+        </div>
       </header>
 
       <section className="home-hero">
-        <h1>
-          Tải Video{" "}
-          <span className="primary-gradient">Facebook, Youtube, Threads</span>{" "}
-          <br />
-          <span className="home-hero-sub">Miễn phí • Nhanh • Chuyên nghiệp</span>
-        </h1>
-        <p className="home-hero-desc">
-          Dán link video bạn cần tải, chọn nền tảng, <b>tải về ngay!</b> <br />
-          Hỗ trợ Facebook, Youtube, Threads, Instagram, TikTok, Twitter...
-        </p>
-        <Link className="btn-primary" to="/download/facebook" aria-label="Bắt đầu tải video từ Facebook">
-          Bắt đầu với Facebook
-        </Link>
+        <div className="hero-content">
+          <h1>
+            Tải Video <span className="primary-gradient">Facebook, Instagram, TikTok</span>
+          </h1>
+          <p className="hero-subtitle">Miễn phí • Nhanh chóng • An toàn</p>
+          <p className="hero-description">
+            Chỉ cần dán link video, chọn nền tảng và tải về ngay lập tức! <br />
+            Hỗ trợ đầy đủ các nền tảng phổ biến: Facebook, Instagram, TikTok, và nhiều hơn nữa sắp ra mắt.
+          </p>
+          <Link
+            className="btn-primary"
+            to="/download/facebook"
+            aria-label="Bắt đầu tải video từ Facebook"
+          >
+            <FaDownload /> Bắt đầu tải ngay
+          </Link>
+        </div>
       </section>
 
       <section className="home-platforms">
-        <h2>Các nền tảng hỗ trợ</h2>
-        <div className="home-platform-list">
-          {platforms.map((p) =>
-            p.active ? (
-              <Link
-                to={p.path}
-                className="home-platform-card"
+        <div className="section-container">
+          <h2>Các nền tảng hỗ trợ</h2>
+          <div className="platform-grid">
+            {platforms.map((p) => (
+              <div 
+                className={`platform-card ${p.active ? "" : "coming-soon"}`} 
                 key={p.name}
-                aria-label={`Tải video từ ${p.name}`}
+                onClick={!p.active ? (e) => handleComingSoon(p.name, e) : undefined}
               >
-                <div className="icon-wrap">{p.icon}</div>
-                <div>
-                  <b>{p.name}</b>
-                  <div className="platform-desc">{p.desc}</div>
+                <div className="platform-icon" style={{ color: p.color }}>
+                  {p.icon}
                 </div>
-              </Link>
-            ) : (
-              <a
-                href={p.path}
-                className="home-platform-card coming-soon"
-                key={p.name}
-                onClick={(e) => handleComingSoon(p.name, e)}
-                tabIndex={0}
-                aria-label={`${p.name} đang được phát triển`}
-              >
-                <div className="icon-wrap">{p.icon}</div>
-                <div>
-                  <b>{p.name}</b>
-                  <div className="platform-desc">{p.desc}</div>
-                  <span className="badge-soon">Đang phát triển</span>
+                <div className="platform-info">
+                  <h3>{p.name}</h3>
+                  <p>{p.desc}</p>
                 </div>
-              </a>
-            )
-          )}
+                {!p.active && (
+                  <div className="platform-badge">Sắp ra mắt</div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <footer className="home-footer">
-        © {new Date().getFullYear()} Nhdinh Downloader Pro - All rights reserved. | Built with ❤️
+        <div className="footer-container">
+          <div className="footer-top">
+            <span>© {new Date().getFullYear()} Nhđinh Video Downloader Pro - All rights reserved.</span>
+            <nav className="footer-nav">
+              <Link to="/terms" aria-label="Điều khoản dịch vụ">
+                Điều khoản dịch vụ
+              </Link>
+              <Link to="/privacy" aria-label="Chính sách bảo mật">
+                Chính sách bảo mật
+              </Link>
+              <Link to="/contact" aria-label="Liên hệ">
+                Liên hệ
+              </Link>
+            </nav>
+          </div>
+          <div className="footer-bottom">
+            <span>Built with ❤️ by Nhđinh Team</span>
+          </div>
+        </div>
       </footer>
 
       {toast && (
-        <div className="toast-coming-soon" role="alert">
+        <div className="toast-coming-soon" role="alert" aria-live="polite">
           {toast}
         </div>
       )}

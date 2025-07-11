@@ -7,21 +7,32 @@ import "./Guide.scss";
 
 function Guide() {
   const [copied, setCopied] = useState(false);
+  const [activePlatform, setActivePlatform] = useState(null);
 
   const handleCopyClick = () => {
-    navigator.clipboard.writeText("https://www.facebook.com/...");
+    navigator.clipboard.writeText("https://www.facebook.com/watch?v=example");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const platforms = [
+    { id: "facebook", name: "Facebook", icon: <SiFacebook size={20} /> },
+    { id: "youtube", name: "YouTube", icon: <SiYoutube size={20} /> },
+    { id: "instagram", name: "Instagram", icon: <SiInstagram size={20} /> },
+    { id: "tiktok", name: "TikTok", icon: <SiTiktok size={20} /> }
+  ];
 
   return (
     <div className="guide-container">
       <div className="guide-card">
         <header className="guide-header">
           <div className="guide-header-icon">
-            <PiNotebookLight size={24} />
+            <PiNotebookLight size={28} />
           </div>
-          <h2 className="guide-title">Hướng dẫn tải video</h2>
+          <div>
+            <h2 className="guide-title">Hướng dẫn tải video</h2>
+            <p className="guide-subtitle">Hướng dẫn từng bước để tải video từ các nền tảng phổ biến</p>
+          </div>
           <div className="guide-header-decoration"></div>
         </header>
 
@@ -49,7 +60,7 @@ function Guide() {
           </div>
 
           <div className="step-connector">
-            <PiArrowRightLight size={20} />
+            <PiArrowRightLight size={24} />
           </div>
 
           <div className="guide-step">
@@ -59,11 +70,17 @@ function Guide() {
               <p className="step-description">
                 Chọn đúng nền tảng từ danh sách, dán link vào ô tìm kiếm và nhấn <strong>"Xem trước"</strong> để kiểm tra video.
               </p>
+              <div className="step-visual">
+                <div className="search-bar-demo">
+                  <div className="search-input">Dán liên kết tại đây...</div>
+                  <button className="preview-button">Xem trước</button>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="step-connector">
-            <PiArrowRightLight size={20} />
+            <PiArrowRightLight size={24} />
           </div>
 
           <div className="guide-step">
@@ -73,6 +90,11 @@ function Guide() {
               <p className="step-description">
                 Chọn chất lượng video (HD, Full HD) và nhấn <strong>"Tải xuống"</strong>. Video sẽ được lưu vào bộ nhớ thiết bị của bạn.
               </p>
+              <div className="quality-options">
+                <div className="quality-option">360p</div>
+                <div className="quality-option active">720p HD</div>
+                <div className="quality-option">1080p Full HD</div>
+              </div>
             </div>
           </div>
         </div>
@@ -83,26 +105,18 @@ function Guide() {
             <span>Hỗ trợ các nền tảng</span>
           </div>
           <div className="platform-icons">
-            <Tooltip title="Facebook" arrow>
-              <div className="platform-icon facebook">
-                <SiFacebook size={20} />
-              </div>
-            </Tooltip>
-            <Tooltip title="YouTube" arrow>
-              <div className="platform-icon youtube">
-                <SiYoutube size={20} />
-              </div>
-            </Tooltip>
-            <Tooltip title="Instagram" arrow>
-              <div className="platform-icon instagram">
-                <SiInstagram size={20} />
-              </div>
-            </Tooltip>
-            <Tooltip title="TikTok" arrow>
-              <div className="platform-icon tiktok">
-                <SiTiktok size={20} />
-              </div>
-            </Tooltip>
+            {platforms.map(platform => (
+              <Tooltip title={platform.name} arrow key={platform.id}>
+                <div 
+                  className={`platform-icon ${platform.id} ${activePlatform === platform.id ? 'active' : ''}`}
+                  onMouseEnter={() => setActivePlatform(platform.id)}
+                  onMouseLeave={() => setActivePlatform(null)}
+                >
+                  {platform.icon}
+                  <span className="platform-name">{platform.name}</span>
+                </div>
+              </Tooltip>
+            ))}
           </div>
         </div>
 
@@ -118,5 +132,4 @@ function Guide() {
     </div>
   );
 }
-
 export default Guide;

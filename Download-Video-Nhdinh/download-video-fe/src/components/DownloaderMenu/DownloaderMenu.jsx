@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaFacebook,
   FaInstagram,
@@ -14,44 +14,52 @@ const platforms = [
   {
     name: "Facebook",
     path: "/download/facebook",
-    icon: <FaFacebook color="#1877f3" />,
+    icon: <FaFacebook />,
     active: true,
+    color: "#1877f3"
   },
   {
     name: "Instagram",
     path: "/download/instagram",
-    icon: <FaInstagram color="#E1306C" />,
+    icon: <FaInstagram />,
     active: true,
+    color: "#E1306C"
   },
   {
     name: "TikTok",
     path: "/download/tiktok",
-    icon: <FaTiktok color="#000" />,
+    icon: <FaTiktok />,
     active: true,
+    color: "#000000"
   },
   {
     name: "Twitter",
     path: "/download/twitter",
-    icon: <FaTwitter color="#1da1f2" />,
+    icon: <FaTwitter />,
     active: false,
+    color: "#1da1f2"
   },
   {
     name: "Threads",
     path: "/download/threads",
-    icon: <FaAt color="#000" />,
+    icon: <FaAt />,
     active: false,
+    color: "#000000"
   },
   {
     name: "Youtube",
     path: "/download/youtube",
-    icon: <FaYoutube color="#f00" />,
+    icon: <FaYoutube />,
     active: false,
+    color: "#ff0000"
   },
 ];
 
 function DownloaderMenu() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [toast, setToast] = useState("");
+  const selectRef = useRef(null);
 
   useEffect(() => {
     if (toast) {
@@ -63,6 +71,20 @@ function DownloaderMenu() {
   const handleComingSoon = (name, e) => {
     e.preventDefault();
     setToast(`"${name}" đang được phát triển. Quay lại sau nhé!`);
+  };
+
+  const handlePlatformSelect = (e) => {
+    const index = parseInt(e.target.value, 10);
+    if (isNaN(index)) return;
+    const platform = platforms[index];
+    if (platform.active) {
+      navigate(platform.path);
+    } else {
+      setToast(`"${platform.name}" đang được phát triển. Quay lại sau nhé!`);
+      if (selectRef.current) {
+        selectRef.current.value = "";
+      }
+    }
   };
 
   return (
@@ -77,6 +99,7 @@ function DownloaderMenu() {
                 location.pathname === p.path ? " active" : ""
               }`}
               aria-label={`Tải video từ ${p.name}`}
+              style={{ "--platform-color": p.color }}
             >
               {p.icon} <span>{p.name}</span>
             </Link>
@@ -88,12 +111,28 @@ function DownloaderMenu() {
               onClick={(e) => handleComingSoon(p.name, e)}
               tabIndex={0}
               aria-label={`${p.name} đang được phát triển`}
+              style={{ "--platform-color": p.color }}
             >
-              {p.icon} <span>{p.name}</span>
+              {p.icon} <span>{p.name}</span> <span className="badge-soon">Đang phát triển</span>
             </a>
           )
         )}
       </nav>
+      <div className="downloader-menu-mobile">
+        <select
+          className="platform-select"
+          onChange={handlePlatformSelect}
+          ref={selectRef}
+          aria-label="Chọn nền tảng để tải video"
+        >
+          <option value="">Chọn nền tảng</option>
+          {platforms.map((p, index) => (
+            <option key={p.name} value={index}>
+              {p.name} {p.active ? "" : "(Đang phát triển)"}
+            </option>
+          ))}
+        </select>
+      </div>
       {toast && (
         <div className="toast-coming-soon" role="alert">
           {toast}

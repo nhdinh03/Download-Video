@@ -1,14 +1,45 @@
-// Variables for colors and other constants
-$primary-color: #1877f3;
-$background-color-light: #f5f7fa;
-$background-color-hover: #eaf4ff;
-$badge-color: #ffc107;
-$text-color-dark: #222;
-$box-shadow-light: rgba(24, 119, 243, 0.03);
-$box-shadow-hover: rgba(24, 119, 243, 0.08);
-$toast-background: #222;
-$toast-color: #fff;
-$toast-shadow: rgba(0, 0, 0, 0.09);
+// DownloaderMenu.scss - Dark Mode Compatible
+
+// Design Tokens
+:root {
+  // Colors
+  --primary-color: #1877f3;
+  --background-light: #f5f7fa;
+  --background-dark: #1e1e1e;
+  --background-hover-light: #eaf4ff;
+  --background-hover-dark: #2d2d2d;
+  --text-color-light: #222;
+  --text-color-dark: #e0e0e0;
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #2a2a2a;
+  --border-color-light: #e0e0e0;
+  --border-color-dark: #444;
+  --badge-color: #ffc107;
+  --toast-bg-light: #222;
+  --toast-bg-dark: #f5f5f5;
+  --toast-text-light: #fff;
+  --toast-text-dark: #222;
+  --toast-shadow-light: rgba(0, 0, 0, 0.09);
+  --toast-shadow-dark: rgba(0, 0, 0, 0.2);
+  
+  // Shadows
+  --shadow-light: rgba(24, 119, 243, 0.03);
+  --shadow-hover-light: rgba(24, 119, 243, 0.08);
+  --shadow-hover-dark: rgba(24, 119, 243, 0.15);
+}
+
+.dark-mode {
+  --background-light: var(--background-dark);
+  --background-hover-light: var(--background-hover-dark);
+  --text-color-light: var(--text-color-dark);
+  --card-bg-light: var(--card-bg-dark);
+  --border-color-light: var(--border-color-dark);
+  --toast-bg-light: var(--toast-bg-dark);
+  --toast-text-light: var(--toast-text-dark);
+  --toast-shadow-light: var(--toast-shadow-dark);
+  --shadow-light: rgba(24, 119, 243, 0.15);
+  --shadow-hover-light: var(--shadow-hover-dark);
+}
 
 // Menu styles
 .downloader-menu {
@@ -17,42 +48,63 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
   gap: 18px;
   justify-content: center;
   margin: 20px 0 36px 0;
+  padding: 0 16px;
 
   .downloader-menu-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: $text-color-dark;
-    background: $background-color-light;
-    padding: 9px 20px;
-    border-radius: 10px;
+    color: var(--text-color-light);
+    background: var(--card-bg-light);
+    padding: 12px 20px;
+    border-radius: 12px;
     font-weight: 600;
     text-decoration: none;
     font-size: clamp(0.9rem, 2vw, 1rem);
-    transition: box-shadow 0.18s, background 0.16s, color 0.16s;
-    box-shadow: 0 1px 5px $box-shadow-light;
-
-    &.active,
-    &:hover {
-      background: $background-color-hover;
-      color: $primary-color;
-      box-shadow: 0 2px 14px $box-shadow-hover;
+    transition: transform 0.2s, box-shadow 0.18s, background 0.16s, color 0.16s;
+    box-shadow: 0 1px 5px var(--shadow-light);
+    border: 1px solid var(--border-color-light);
+    
+    svg {
+      color: var(--platform-color);
+      font-size: clamp(1.2rem, 3vw, 1.3rem);
+      transition: transform 0.2s;
     }
 
-    svg {
-      font-size: clamp(1.2rem, 3vw, 1.3rem);
+    span {
+      transition: color 0.16s;
+    }
+
+    &:hover {
+      background: var(--background-hover-light);
+      box-shadow: 0 2px 14px var(--shadow-hover-light);
+      transform: scale(1.05);
+      
+      svg {
+        transform: scale(1.15);
+      }
+    }
+
+    &.active {
+      background: var(--background-hover-light);
+      box-shadow: 0 0 0 2px var(--primary-color);
+      
+      span {
+        color: var(--primary-color);
+      }
     }
 
     &.coming-soon {
-      opacity: 0.65;
+      opacity: 0.75;
       cursor: pointer;
       position: relative;
       pointer-events: auto;
+      filter: grayscale(0.7);
 
       .badge-soon {
         margin-left: 8px;
-        background: $badge-color;
-        color: $text-color-dark;
+        background: var(--badge-color);
+        color: #222;
         border-radius: 10px;
         font-size: 0.89em;
         padding: 2px 9px;
@@ -63,22 +115,59 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
   }
 }
 
+// Mobile menu styles
+.downloader-menu-mobile {
+  display: none;
+  text-align: center;
+  margin: 20px 0;
+  padding: 0 16px;
+
+  .platform-select {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color-light);
+    background: var(--card-bg-light);
+    color: var(--text-color-light);
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%231877f3" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    transition: all 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+    
+    option {
+      background: var(--card-bg-light);
+      color: var(--text-color-light);
+    }
+  }
+}
+
 // Toast styles
 .toast-coming-soon {
   position: fixed;
   left: 50%;
   bottom: 44px;
   transform: translateX(-50%);
-  background: $toast-background;
-  color: $toast-color;
+  background: var(--toast-bg-light);
+  color: var(--toast-text-light);
   padding: 12px 28px;
   border-radius: 12px;
   font-size: clamp(0.9rem, 2vw, 1.08rem);
   font-weight: 500;
   z-index: 2002;
-  box-shadow: 0 4px 28px 0 $toast-shadow;
+  box-shadow: 0 4px 28px 0 var(--toast-shadow-light);
   animation: fadeInOut 2.2s;
-
+  border: 1px solid var(--border-color-light);
+  
   @keyframes fadeInOut {
     0% {
       opacity: 0;
@@ -95,5 +184,43 @@ $toast-shadow: rgba(0, 0, 0, 0.09);
       opacity: 0;
       bottom: 60px;
     }
+  }
+}
+
+// Media queries
+@media (max-width: 768px) {
+  .downloader-menu {
+    display: none;
+  }
+  .downloader-menu-mobile {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .downloader-menu {
+    display: flex;
+  }
+  .downloader-menu-mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .downloader-menu {
+    gap: 12px;
+    
+    .downloader-menu-item {
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      
+      .badge-soon {
+        font-size: 0.75rem;
+      }
+    }
+  }
+  
+  .downloader-menu-mobile .platform-select {
+    font-size: 0.9rem;
   }
 }
