@@ -26,34 +26,44 @@ import video.example.com.util.FacebookVideoUtil;
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class FacebookVideoController {
+@GetMapping(value = "/download/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter streamDownload(@RequestParam String url, @RequestParam(required = false) String title) {
+    SseEmitter emitter = new SseEmitter(600_000L); // Tăng lên 10 phút
 
-    @GetMapping(value = "/download/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamDownload(@RequestParam String url) {
-        SseEmitter emitter = new SseEmitter(300_000L);
+    new Thread(() -> {
+        try {
+            String filename = FacebookVideoUtil.downloadVideoUsingYtDlp(url, title, progress -> {
+                try {
+                    emitter.send(SseEmitter.event().data(progress));
+                } catch (IOException e) {
+                    System.err.println("Client disconnected: " + e.getMessage());
+                }
+            });
 
-        new Thread(() -> {
+            emitter.send(SseEmitter.event().data("DONE_" + filename));
+        } catch (Exception e) {
             try {
-                String filename = FacebookVideoUtil.downloadVideoUsingYtDlp(url, progress -> {
+                emitter.send(SseEmitter.event().data("ERROR_Retry_" + e.getMessage()));
+                // Thêm retry logic nếu cần
+                Thread.sleep(2000); // Chờ 2 giây trước khi retry
+                String filename = FacebookVideoUtil.downloadVideoUsingYtDlp(url, title, progress -> {
                     try {
                         emitter.send(SseEmitter.event().data(progress));
-                    } catch (IOException e) {
-                        System.err.println("Client disconnected: " + e.getMessage());
+                    } catch (IOException ex) {
+                        System.err.println("Client disconnected: " + ex.getMessage());
                     }
                 });
-
                 emitter.send(SseEmitter.event().data("DONE_" + filename));
-            } catch (Exception e) {
-                try {
-                    emitter.send(SseEmitter.event().data("ERROR_" + e.getMessage()));
-                } catch (IOException ignored) {
-                }
-            } finally {
-                emitter.complete();
+            } catch (Exception ex) {
+                // emitter.send(SseEmitter.event().data("ERROR_" + ex.getMessage()));
             }
-        }).start();
+        } finally {
+            emitter.complete();
+        }
+    }).start();
 
-        return emitter;
-    }
+    return emitter;
+}
 
     @GetMapping("/download")
     public ResponseEntity<InputStreamResource> downloadVideo(@RequestParam String filename) throws IOException {
@@ -64,7 +74,7 @@ public class FacebookVideoController {
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
                 .contentLength(file.length())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);

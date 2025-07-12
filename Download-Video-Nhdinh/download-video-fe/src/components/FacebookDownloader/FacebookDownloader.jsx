@@ -91,8 +91,13 @@ const FacebookDownloader = () => {
     setError("");
     setSuccess("");
 
+    const sanitizedTitle = videoTitle
+      .replaceAll('[<>:"/\\\\|?*]', "")
+      .replaceAll("\\s+", "_");
     const eventSource = new EventSource(
-      `${API_BASE}/download/stream?url=${encodeURIComponent(url)}`
+      `${API_BASE}/download/stream?url=${encodeURIComponent(
+        url
+      )}&title=${encodeURIComponent(sanitizedTitle)}`
     );
     sseRef.current = eventSource;
 
@@ -108,27 +113,10 @@ const FacebookDownloader = () => {
         tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(
           fileName
         )}`;
-        tempLink.download = fileName;
+        tempLink.download = sanitizedTitle ? `${sanitizedTitle}.mp4` : fileName;
         tempLink.click();
         setSuccess("Tải video thành công!");
         setLoading((prev) => ({ ...prev, download: false }));
-
-        const history = JSON.parse(
-          localStorage.getItem("downloadHistory") || "[]"
-        );
-        const newEntry = {
-          id: Date.now(),
-          url,
-          title: videoTitle || "Untitled",
-          previewUrl,
-          timestamp: new Date().toISOString(),
-          platform: "facebook",
-        };
-        history.unshift(newEntry);
-        localStorage.setItem(
-          "downloadHistory",
-          JSON.stringify(history.slice(0, 50))
-        );
         eventSource.close();
       } else if (msg.startsWith("ERROR_")) {
         setError(msg.replace("ERROR_", ""));
@@ -144,17 +132,17 @@ const FacebookDownloader = () => {
         setTimeout(handleDownload, 2000);
       }
     };
-  }, [url, isValidFacebookUrl, videoTitle, previewUrl, progress]);
-
-  const handleCopy = useCallback(() => {
+  }, [url, videoTitle, previewUrl, progress , isValidFacebookUrl]);
+  
+const handleCopy = useCallback(() => {
     if (navigator.clipboard && previewUrl) {
-      navigator.clipboard.writeText(previewUrl);
-      setSuccess("Link đã được sao chép!");
-      setTimeout(() => setSuccess(""), 1500);
+        navigator.clipboard.writeText(previewUrl);
+        setSuccess("Link đã được sao chép!");
+        setTimeout(() => setSuccess(""), 1500);
     } else {
-      setError("Không thể sao chép link!");
+        setError("Không thể sao chép link!");
     }
-  }, [previewUrl]);
+}, [previewUrl]);
 
   const handleBack = () => {
     setUrl("");
