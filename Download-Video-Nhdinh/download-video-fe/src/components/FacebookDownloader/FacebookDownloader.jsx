@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom"; // Remove navigate if not used
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FaFacebook,
   FaDownload,
@@ -26,7 +26,7 @@ const FacebookDownloader = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
-  const retryCountRef = useRef(0); // Limit retries
+  const navigate = useNavigate();
   const location = useLocation();
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
@@ -60,31 +60,20 @@ const FacebookDownloader = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: inputUrl }),
         });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Server error");
-        }
         const data = await res.json();
-        if (!data.videoUrl) throw new Error("Không lấy được video");
-
-        // Async HEAD check để không block
-        const videoTest = new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("HEAD", data.videoUrl, true);
-          xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error("Video URL không khả dụng")));
-          xhr.onerror = reject;
-          xhr.send();
-        });
-        await videoTest;
-
-        setPreviewUrl(data.videoUrl);
-        setVideoTitle(data.title || "Untitled");
-      } catch (err) {
-        if (err.message.includes("fetch")) {
-          setError("Không kết nối được server. Kiểm tra backend?");
+        if (!res.ok || !data.videoUrl)
+          throw new Error(data.error || "Không lấy được video");
+        const videoTest = new XMLHttpRequest();
+        videoTest.open("HEAD", data.videoUrl, false);
+        videoTest.send();
+        if (videoTest.status === 200) {
+          setPreviewUrl(data.videoUrl);
+          setVideoTitle(data.title || "Untitled");
         } else {
-          setError("Lỗi: " + err.message);
+          throw new Error("Video URL không khả dụng");
         }
+      } catch (err) {
+        setError("Lỗi: " + (err.message || "Không lấy được video"));
       } finally {
         setLoading((prev) => ({ ...prev, preview: false }));
       }
@@ -116,13 +105,17 @@ const FacebookDownloader = () => {
         setProgress(100);
         setSuccess("Video đã sẵn sàng để tải xuống...");
         const tempLink = document.createElement("a");
-        tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(fileName)}`;
+        tempLink.href = `${API_BASE}/download?filename=${encodeURIComponent(
+          fileName
+        )}`;
         tempLink.download = fileName;
         tempLink.click();
         setSuccess("Tải video thành công!");
         setLoading((prev) => ({ ...prev, download: false }));
 
-        const history = JSON.parse(localStorage.getItem("downloadHistory") || "[]");
+        const history = JSON.parse(
+          localStorage.getItem("downloadHistory") || "[]"
+        );
         const newEntry = {
           id: Date.now(),
           url,
@@ -132,7 +125,10 @@ const FacebookDownloader = () => {
           platform: "facebook",
         };
         history.unshift(newEntry);
-        localStorage.setItem("downloadHistory", JSON.stringify(history.slice(0, 50)));
+        localStorage.setItem(
+          "downloadHistory",
+          JSON.stringify(history.slice(0, 50))
+        );
         eventSource.close();
       } else if (msg.startsWith("ERROR_")) {
         setError(msg.replace("ERROR_", ""));
@@ -142,15 +138,10 @@ const FacebookDownloader = () => {
     };
 
     eventSource.onerror = () => {
-      if (progress < 100 && retryCountRef.current < 3) { // Limit 3 retries
-        retryCountRef.current++;
-        setError(`Mất kết nối, thử lại lần ${retryCountRef.current}...`);
+      if (progress < 100) {
+        setError("Mất kết nối máy chủ, đang thử lại...");
         eventSource.close();
-        setTimeout(handleDownload, 2000 * retryCountRef.current); // Exponential backoff
-      } else {
-        setError("Mất kết nối máy chủ. Vui lòng thử lại sau.");
-        setLoading((prev) => ({ ...prev, download: false }));
-        eventSource.close();
+        setTimeout(handleDownload, 2000);
       }
     };
   }, [url, isValidFacebookUrl, videoTitle, previewUrl, progress]);
@@ -175,80 +166,100 @@ const FacebookDownloader = () => {
   };
 
   useEffect(() => {
+    return () => {
+      if (sseRef.current) sseRef.current.close();
+    };
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const urlFromQuery = params.get("url");
     const action = params.get("action");
     if (urlFromQuery) {
-      const decodedUrl = decodeURIComponent(urlFromQuery);
-      setUrl(decodedUrl);
-      if (action === "preview") handlePreview(decodedUrl);
+      setUrl(decodeURIComponent(urlFromQuery));
+      if (action === "preview") handlePreview(decodeURIComponent(urlFromQuery));
       else if (action === "download") {
-        handlePreview(decodedUrl).then(handleDownload);
+        handlePreview(decodeURIComponent(urlFromQuery)).then(handleDownload);
       }
     }
-
-    return () => {
-      if (sseRef.current) sseRef.current.close(); // Cleanup SSE on unmount
-    };
   }, [location, handlePreview, handleDownload]);
 
   return (
     <div className="main-center">
       <div className="fb-downloader-root">
-        <div className="header-row">
-          <div className="fb-header">
-            <FaFacebook className="fb-logo" />
-            <span className="fb-title">
-              Facebook Video{" "}
-              <span className="hide-on-pc">
-                <br />
-              </span>{" "}
-              Downloader
-            </span>
-          </div>
-        </div>
-
         {!previewUrl && (
-          <div className="fb-input-group">
-            <label htmlFor="fb-url-input" className="sr-only">
-              Nhập link video Facebook
-            </label>
-            <input
-              id="fb-url-input"
-              type="url"
-              className={`fb-input ${url && !isValidFacebookUrl(url) ? "fb-input-error" : ""}`}
-              placeholder="Dán link video Facebook..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handlePreview()}
-              spellCheck={false}
-              autoFocus
-              autoComplete="off"
-            />
-            <button
-              className="fb-btn fb-btn-preview"
-              onClick={async () => {
-                try {
-                  const clipboardText = await navigator.clipboard.readText();
-                  const cleanedUrl = clipboardText.trim();
-                  setUrl(cleanedUrl);
-                  handlePreview(cleanedUrl);
-                } catch {
-                  setError(isMobile ? "Hãy dán thủ công!" : "Không thể đọc clipboard!");
-                }
-              }}
-              disabled={loading.preview}
-            >
-              {loading.preview ? <FaSpinner className="fb-spin" /> : <FaRegCopy />}
-              {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
-            </button>
-          </div>
+          <>
+            <div className="header-row">
+              <div className="fb-header">
+                <FaFacebook className="fb-logo" />
+                <span className="fb-title">
+                  Facebook Video{" "}
+                  <span className="hide-on-pc">
+                    <br />
+                  </span>{" "}
+                  Downloader
+                </span>
+              </div>
+            </div>
+            <div className="fb-input-group">
+              <input
+                type="url"
+                className={`fb-input ${
+                  url && !isValidFacebookUrl(url) ? "fb-input-error" : ""
+                }`}
+                placeholder="Dán link video Facebook..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePreview()}
+                spellCheck={false}
+                autoFocus
+                autoComplete="off"
+              />
+              <button
+                className="fb-btn fb-btn-preview"
+                onClick={async () => {
+                  try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    const cleanedUrl = clipboardText.trim();
+                    setUrl(cleanedUrl);
+                    handlePreview(cleanedUrl);
+                  } catch {
+                    setError(
+                      isMobile
+                        ? "Hãy dán thủ công!"
+                        : "Không thể đọc clipboard!"
+                    );
+                  }
+                }}
+                disabled={loading.preview}
+              >
+                {loading.preview ? (
+                  <FaSpinner className="fb-spin" />
+                ) : (
+                  <FaRegCopy />
+                )}
+                {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
+              </button>
+            </div>
+          </>
         )}
 
         {previewUrl && !loading.preview && (
           <div className="fb-preview-row">
             <div className="fb-preview-col fb-preview-video">
-              {videoTitle && <div className="fb-video-title">{videoTitle}</div>}
+              {videoTitle && (
+                <div
+                  className="fb-video-title"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.12rem",
+                    marginBottom: 10,
+                    color: "#1b2535",
+                  }}
+                >
+                  {videoTitle}
+                </div>
+              )}
               <video
                 src={previewUrl}
                 controls
@@ -263,7 +274,11 @@ const FacebookDownloader = () => {
                 onClick={handleDownload}
                 disabled={loading.download}
               >
-                {loading.download ? <FaSpinner className="fb-spin" /> : <FaDownload />}
+                {loading.download ? (
+                  <FaSpinner className="fb-spin" />
+                ) : (
+                  <FaDownload />
+                )}
                 {loading.download ? "Đang tải..." : "Lưu về máy"}
               </button>
               <button
@@ -280,23 +295,27 @@ const FacebookDownloader = () => {
             </div>
           </div>
         )}
-
         {loading.download && (
           <div className="fb-progress-wrap">
             <div className="fb-progress-bar-bg">
-              <div className="fb-progress-bar" style={{ width: `${progress}%` }} />
+              <div
+                className="fb-progress-bar"
+                style={{ width: `${progress}%` }}
+              />
             </div>
             <div className="fb-progress-label">{progress}%</div>
           </div>
         )}
-
         {(error || success) && (
-          <div className={`fb-alert ${success ? "fb-alert-success" : "fb-alert-error"}`}>
+          <div
+            className={`fb-alert ${
+              success ? "fb-alert-success" : "fb-alert-error"
+            }`}
+          >
             {success ? <FaCheckCircle /> : <FaTimesCircle />}
             {success || error}
           </div>
         )}
-
         <br />
         {!previewUrl && (
           <div className="fb-guide">
@@ -305,9 +324,9 @@ const FacebookDownloader = () => {
             → khi video hiện, bấm <b>Lưu về máy</b>.
           </div>
         )}
-
         <div className="fb-powered">
-          © {new Date().getFullYear()} Nhdinh Facebook Video Downloader. All rights reserved.
+          <br />© {new Date().getFullYear()} Nhdinh Facebook Video Downloader.
+          All rights reserved.
         </div>
       </div>
     </div>

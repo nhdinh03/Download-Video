@@ -29,7 +29,7 @@ const platforms = [
     name: "TikTok",
     path: "/download/tiktok",
     icon: <FaTiktok />,
-    active: true,
+    active: false,
     color: "#000000"
   },
   {
