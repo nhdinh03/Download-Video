@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.annotation.PreDestroy;
@@ -83,6 +85,7 @@ public class TiktokVideoController {
         INVALID_PROXY("Proxy không hợp lệ. Hệ thống sẽ bỏ qua proxy."),
         INVALID_THUMBNAIL("Thumbnail không hợp lệ. Sử dụng placeholder thay thế."),
         FFMPEG_UNAVAILABLE("ffmpeg không khả dụng. Cần install để re-encode video sang H.264."),
+        PREVIEW_OEMBED_FAILED("Không thể lấy embed preview từ TikTok oEmbed. Fallback sang thumbnail."),
         PREVIEW_FAILED("Không thể lấy thông tin video. Video có thể bị hạn chế quyền riêng tư, vùng miền, hoặc bị chặn bởi TikTok. Hãy thử tải trực tiếp.");
 
         private final String message;
@@ -121,6 +124,7 @@ public class TiktokVideoController {
             return false;
         }
     }
+
     private boolean isFfmpegAvailable() {
         try {
             Process process = new ProcessBuilder("ffmpeg", "-version").start();
@@ -143,6 +147,20 @@ public class TiktokVideoController {
             return host != null && ALLOWED_THUMBNAIL_DOMAINS.stream().anyMatch(host::endsWith);
         } catch (java.net.URISyntaxException e) {
             logger.warn("Invalid thumbnail URL: {}, error: {}", url, e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isValidVideoUrl(String url) {
+        if (url == null || !url.startsWith("https://") || !url.endsWith(".mp4")) {
+            return false;
+        }
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            String host = uri.getHost();
+            return host != null && (host.endsWith("tiktokcdn.com") || host.endsWith("muscdn.com"));  // Giới hạn domain an toàn
+        } catch (java.net.URISyntaxException e) {
+            logger.warn("Invalid video URL: {}", url, e);
             return false;
         }
     }
@@ -261,6 +279,29 @@ public class TiktokVideoController {
             return ResponseEntity.badRequest().body(Map.of("error", ErrorMessage.INVALID_URL.getMessage()));
         }
 
+        // Tối ưu: Thử oEmbed trước (nhanh, embed video official - ưu tiên hiển thị video)
+        RestTemplate restTemplate = new RestTemplate();
+        String oEmbedUrl = "https://www.tiktok.com/oembed?url=" + tiktokUrl;
+        try {
+            ResponseEntity<Map> oEmbedResponse = restTemplate.getForEntity(oEmbedUrl, Map.class);
+            if (oEmbedResponse.getStatusCode() == HttpStatus.OK) {
+                Map<String, Object> oEmbedData = oEmbedResponse.getBody();
+                String title = (String) oEmbedData.get("title");
+                String thumbnail = (String) oEmbedData.get("thumbnail_url");
+                String embedHtml = (String) oEmbedData.get("html");
+                logger.info("oEmbed success for URL: {}, title: {}", tiktokUrl, title);
+                return ResponseEntity.ok(Map.of(
+                        "title", Normalizer.normalize(title != null ? title : "Untitled", Normalizer.Form.NFC),
+                        "thumbnail", isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
+                        "embedHtml", embedHtml != null ? embedHtml : "",
+                        "videoUrl", "" // Rỗng nếu oEmbed, frontend sẽ dùng embedHtml cho video preview
+                ));
+            }
+        } catch (Exception e) {
+            logger.warn("oEmbed failed for URL: {}, error: {}. Fallback to yt-dlp.", tiktokUrl, e.getMessage());
+        }
+
+        // Fallback yt-dlp nếu oEmbed fail - lấy videoUrl để frontend hiển thị <video>
         if (!isYtDlpAvailable()) {
             logger.error("yt-dlp is not available on the system");
             return ResponseEntity.status(500).body(Map.of("error", ErrorMessage.YT_DLP_UNAVAILABLE.getMessage()));
@@ -269,6 +310,7 @@ public class TiktokVideoController {
         int retries = 3;
         String videoTitle = null;
         String thumbnail = null;
+        String videoUrl = null;  // Ưu tiên lấy direct video URL cho preview
         StringBuilder output = new StringBuilder();
         String effectiveProxy = isValidProxy(proxy) ? proxy : "";
 
@@ -293,29 +335,35 @@ public class TiktokVideoController {
                 command.add(effectiveProxy);
             }
 
+            // Thêm print cho title, thumbnail, và url (direct mp4 link cho video preview)
             command.add("--print");
             command.add("title");
             command.add("--print");
             command.add("thumbnail");
+            command.add("--print");
+            command.add("url");
+
             command.add(tiktokUrl);
 
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
             Process process = null;
             try {
-                logger.debug("Executing yt-dlp with command: {}", pb.command());
+                logger.debug("Executing yt-dlp command: {}", pb.command());
                 process = pb.start();
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         output.append(line).append("\n");
                         logger.debug("yt-dlp output: {}", line);
-                        if (line.startsWith("https://") && isValidThumbnailUrl(line)) {
+                        if (line.startsWith("https://") && isValidThumbnailUrl(line) && thumbnail == null) {
                             thumbnail = line;
                             logger.info("Found valid thumbnail: {}", thumbnail);
+                        } else if (line.startsWith("https://") && line.contains(".mp4") && isValidVideoUrl(line)) {
+                            videoUrl = line;
+                            logger.info("Found valid video URL: {}", videoUrl); // Logging video URL như yêu cầu
                         } else if (!line.startsWith("[") && !line.isEmpty() && !line.contains("ERROR") && videoTitle == null) {
-                            videoTitle = Normalizer.normalize(line, Normalizer.Form.NFC); // Chuẩn hóa tiếng Việt
+                            videoTitle = Normalizer.normalize(line, Normalizer.Form.NFC);
                             logger.info("Found video title: {}", videoTitle);
                         }
                     }
@@ -328,14 +376,16 @@ public class TiktokVideoController {
                 }
 
                 int exitCode = process.exitValue();
-                logger.info("yt-dlp process completed with exit code: {}", exitCode);
-                if (exitCode == 0 && thumbnail != null && isValidThumbnailUrl(thumbnail)) {
+                logger.info("yt-dlp exited with code: {}", exitCode);
+                if (exitCode == 0 && (videoUrl != null || thumbnail != null)) {
                     return ResponseEntity.ok(Map.of(
                             "title", videoTitle != null ? videoTitle : "Untitled",
-                            "thumbnail", thumbnail
+                            "thumbnail", thumbnail != null && isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
+                            "embedHtml", "",
+                            "videoUrl", videoUrl != null && isValidVideoUrl(videoUrl) ? videoUrl : "" // Ưu tiên videoUrl cho frontend
                     ));
                 }
-                logger.warn("yt-dlp attempt failed ({} retries left), exit code: {}, output: {}", retries - 1, exitCode, output.toString());
+                logger.warn("yt-dlp failed (retries left: {}), output: {}", retries - 1, output);
                 retries--;
                 if (retries == 2 && !effectiveProxy.isEmpty()) {
                     logger.info("Retrying without proxy due to proxy failure");
@@ -380,8 +430,10 @@ public class TiktokVideoController {
         logger.error("All retries failed for URL: {}, output: {}", tiktokUrl, output.toString());
         return ResponseEntity.status(500).body(Map.of(
                 "error", ErrorMessage.PREVIEW_FAILED.getMessage(),
-                "thumbnail", thumbnail != null && isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
-                "title", videoTitle != null ? videoTitle : "Untitled"
+                "title", videoTitle != null ? videoTitle : "Untitled",
+                "thumbnail", thumbnail != null ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
+                "embedHtml", "",
+                "videoUrl", ""
         ));
     }
 

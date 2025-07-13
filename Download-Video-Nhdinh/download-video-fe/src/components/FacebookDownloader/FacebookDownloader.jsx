@@ -313,7 +313,7 @@ const handleCopy = useCallback(() => {
           </div>
         )}
         <div className="fb-powered">
-          <br />© {new Date().getFullYear()} Nhdinh Facebook Video Downloader.
+          © {new Date().getFullYear()} Nhdinh Facebook Video Downloader.
           All rights reserved.
         </div>
       </div>

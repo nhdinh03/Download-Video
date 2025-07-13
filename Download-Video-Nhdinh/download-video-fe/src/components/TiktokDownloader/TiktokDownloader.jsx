@@ -24,6 +24,8 @@ const TiktokDownloader = () => {
   const [success, setSuccess] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [embedHtml, setEmbedHtml] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const sseRef = useRef(null);
   const location = useLocation();
@@ -54,6 +56,8 @@ const TiktokDownloader = () => {
       setSuccess("");
       setThumbnail("");
       setVideoTitle("");
+      setEmbedHtml("");
+      setVideoUrl("");
       let data = null;
       try {
         const res = await fetch(`${API_BASE}/preview`, {
@@ -68,6 +72,8 @@ const TiktokDownloader = () => {
         }
         setVideoTitle(data.title || "Chưa có tiêu đề");
         setThumbnail(data.thumbnail || "");
+        setEmbedHtml(data.embedHtml || "");
+        setVideoUrl(data.videoUrl || "");
       } catch (err) {
         setError(`Lỗi: ${err.message || "Không thể lấy thông tin video."}`);
         if (data && data.thumbnail) setThumbnail(data.thumbnail);
@@ -151,8 +157,9 @@ const TiktokDownloader = () => {
     setError("");
     setSuccess("");
     setProgress(0);
+    setEmbedHtml("");
+    setVideoUrl("");
   };
-
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -225,14 +232,36 @@ const TiktokDownloader = () => {
               {videoTitle && (
                 <div className="tiktok-video-title">{videoTitle}</div>
               )}
-              <img
-                src={thumbnail}
-                alt="Hình thu nhỏ video"
-                className="tiktok-video-preview"
-                onError={() =>
-                  setError("Không thể tải hình thu nhỏ. Hãy thử tải video.")
-                }
-              />
+              {embedHtml ? (
+                <div
+                  dangerouslySetInnerHTML={{ __html: embedHtml }}
+                  style={{ width: "100%", height: "auto" }}
+                /> // Ưu tiên embed video official
+              ) : videoUrl ? (
+                <video
+                  src={videoUrl}
+                  controls
+                  muted
+                  loop
+                  style={{ width: "100%", height: "auto" }}
+                  onError={() =>
+                    setError(
+                      "Không thể tải video preview. Hãy thử tải trực tiếp."
+                    )
+                  }
+                >
+                  Trình duyệt không hỗ trợ video.
+                </video> // Fallback video direct nếu oEmbed fail
+              ) : (
+                <img
+                  src={thumbnail}
+                  alt="Hình thu nhỏ video"
+                  className="tiktok-video-preview"
+                  onError={() =>
+                    setError("Không thể tải hình thu nhỏ. Hãy thử tải video.")
+                  }
+                /> // Chỉ thumbnail nếu all fail
+              )}
             </div>
             <div className="tiktok-preview-col tiktok-preview-actions">
               <button
@@ -293,8 +322,8 @@ const TiktokDownloader = () => {
           <div className="tiktok-guide">
             <b>Hướng dẫn:</b> Dán link video TikTok vào ô trên{" "}
             {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
-            → khi hình thu nhỏ hiện, bấm <b>Lưu về máy</b>. Nếu xem trước thất
-            bại, hãy thử tải trực tiếp.
+            → khi preview hiện (ưu tiên video nếu có), bấm <b>Lưu về máy</b>.
+            Nếu xem trước thất bại, thử tải trực tiếp.
           </div>
         )}
 
