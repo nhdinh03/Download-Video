@@ -31,7 +31,13 @@ public class TiktokVideoUtil {
                 "--no-check-certificate",
                 "--ignore-config",
                 proxy.isEmpty() ? "--no-cache-dir" : "--proxy", proxy.isEmpty() ? "--newline" : proxy,
-                "--newline", "-f", "b", "-o", outputPath, tiktokUrl
+                "--newline",
+                "--verbose", // Thêm để debug format selected và re-encode
+                "-f", "bv*[vcodec^=avc1][ext=mp4]+ba[ext=m4a]/best", // Force H.264
+                "-S", "vcodec:avc", // Sort prefer H.264 over HEVC
+                "--recode-video", "mp4", // Force MP4 container
+                "--postprocessor-args", "-c:v libx264 -preset medium -crf 23 -c:a copy", // Re-encode nếu cần
+                "-o", outputPath, tiktokUrl
         );
         pb.redirectErrorStream(true);
         Process process = pb.start();
@@ -40,6 +46,7 @@ public class TiktokVideoUtil {
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");
+                logger.debug("yt-dlp line: {}", line);  // Log chi tiết để debug codec
                 if (progressCallback != null && line.matches(".*?(\\d{1,3})\\.\\d+%.*")) {
                     String percent = line.replaceAll(".*?(\\d{1,3})\\.\\d+%.*", "$1");
                     try {
@@ -52,7 +59,7 @@ public class TiktokVideoUtil {
                     }
                 }
             }
-            logger.debug("yt-dlp output: {}", output.toString());
+            logger.debug("Full yt-dlp output: {}", output.toString());  // Log full để check re-encode
         } catch (IOException e) {
             throw new IOException("Failed to read yt-dlp output: " + e.getMessage() + ", output: " + output.toString(), e);
         }

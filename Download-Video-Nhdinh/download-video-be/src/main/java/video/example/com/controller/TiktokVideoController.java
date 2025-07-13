@@ -82,6 +82,7 @@ public class TiktokVideoController {
         FILE_NOT_FOUND("Tệp không tồn tại. Vui lòng kiểm tra lại."),
         INVALID_PROXY("Proxy không hợp lệ. Hệ thống sẽ bỏ qua proxy."),
         INVALID_THUMBNAIL("Thumbnail không hợp lệ. Sử dụng placeholder thay thế."),
+        FFMPEG_UNAVAILABLE("ffmpeg không khả dụng. Cần install để re-encode video sang H.264."),
         PREVIEW_FAILED("Không thể lấy thông tin video. Video có thể bị hạn chế quyền riêng tư, vùng miền, hoặc bị chặn bởi TikTok. Hãy thử tải trực tiếp.");
 
         private final String message;
@@ -120,6 +121,17 @@ public class TiktokVideoController {
             return false;
         }
     }
+    private boolean isFfmpegAvailable() {
+        try {
+            Process process = new ProcessBuilder("ffmpeg", "-version").start();
+            int exitCode = process.waitFor();
+            return exitCode == 0;
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error("Failed to check ffmpeg availability: {}", e.getMessage());
+            return false;
+        }
+    }
 
     private boolean isValidThumbnailUrl(String url) {
         if (url == null || !url.startsWith("https://")) {
@@ -142,6 +154,18 @@ public class TiktokVideoController {
             SseEmitter emitter = new SseEmitter(0L);
             try {
                 emitter.send(SseEmitter.event().data("ERROR_" + ErrorMessage.INVALID_URL.getMessage()));
+            } catch (IOException e) {
+                logger.error("Failed to send error message: {}", e.getMessage());
+            } finally {
+                emitter.complete();
+            }
+            return emitter;
+        }
+        if (!isFfmpegAvailable()) {
+            logger.error("ffmpeg is not available for re-encode: {}", url);
+            SseEmitter emitter = new SseEmitter(0L);
+            try {
+                emitter.send(SseEmitter.event().data("ERROR_" + ErrorMessage.FFMPEG_UNAVAILABLE.getMessage()));
             } catch (IOException e) {
                 logger.error("Failed to send error message: {}", e.getMessage());
             } finally {
