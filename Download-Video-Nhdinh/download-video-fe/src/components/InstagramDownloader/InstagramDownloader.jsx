@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import  { useState, useCallback, useRef } from "react";
 import {
   FaInstagram,
   FaDownload,
@@ -7,8 +7,6 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaArrowLeft,
-  FaMoon,
-  FaSun,
 } from "react-icons/fa";
 import "./InstagramDownloader.scss";
 

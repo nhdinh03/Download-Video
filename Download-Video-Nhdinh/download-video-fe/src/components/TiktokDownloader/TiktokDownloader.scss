@@ -1,18 +1,10 @@
-// Design Tokens
+// Design Tokens (filtered for TikTok Downloader usage)
 $colors: (
-  primary: #2563eb, // Default primary for Home and Facebook
-  primary-instagram: #c13584, // Instagram-specific primary
   primary-tiktok: #ff2d55, // TikTok-specific primary
-  primary-light: #3b82f6,
-  primary-dark: #1d4ed8,
-  primary-instagram-light: #d81b60,
-  primary-instagram-dark: #ad1457,
-  primary-tiktok-light: #ff6f89,
   primary-tiktok-dark: #e81e4d,
   success: #10b981,
   success-light: #34d399,
   error: #ef4444,
-  error-light: #fecaca,
   bg-light: #f8fafc,
   bg-dark: #0f172a,
   card-light: #ffffff,
@@ -40,13 +32,7 @@ $colors: (
   alert-error-bg-light: #fef2f2,
   alert-error-bg-dark: #7f1d1d,
   alert-error-text-light: #b91c1c,
-  alert-error-text-dark: #fecaca,
-  footer-bg-light: #f1f5f9,
-  footer-bg-dark: #020617,
-  footer-text-light: #64748b,
-  footer-text-dark: #94a3b8,
-  footer-link-light: #2563eb,
-  footer-link-dark: #60a5fa
+  alert-error-text-dark: #fecaca
 );
 
 $spaces: (
@@ -59,29 +45,23 @@ $spaces: (
 );
 
 $fonts: (
-  xs: 0.75rem,
   sm: 0.875rem,
   base: 1rem,
   lg: 1.125rem,
   xl: 1.25rem,
-  2xl: 1.5rem,
-  3xl: 1.875rem,
-  4xl: 2.25rem
+  2xl: 1.5rem
 );
 
 $radii: (
-  sm: 0.25rem,
   md: 0.5rem,
   lg: 0.75rem,
   xl: 1rem,
-  xxl: 1.5rem,
-  full: 9999px
+  xxl: 1.5rem
 );
 
 $shadows: (
   sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05),
-  md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-  lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1)
+  md: 0 4px 6px -1px rgba(0, 0, 0, 0.1)
 );
 
 // Theme Variables
@@ -120,9 +100,6 @@ $shadows: (
   --color-alert-success-text: #{map-get($colors, alert-success-text-dark)};
   --color-alert-error-bg: #{map-get($colors, alert-error-bg-dark)};
   --color-alert-error-text: #{map-get($colors, alert-error-text-dark)};
-  --color-footer-bg: #{map-get($colors, footer-bg-dark)};
-  --color-footer-text: #{map-get($colors, footer-text-dark)};
-  --color-footer-link: #{map-get($colors, footer-link-dark)};
 }
 
 // Mixins
@@ -470,277 +447,17 @@ body {
   padding: var(--space-md);
 }
 
-// Home Component Styles
-.home-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.home-header {
-  background: var(--color-card);
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: var(--space-md) 0;
-
-  .header-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 var(--space-lg);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .home-logo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    font-weight: 700;
-    font-size: var(--text-xl);
-    text-decoration: none;
-
-    .logo-icon {
-      color: var(--color-primary);
-      font-size: var(--text-2xl);
-    }
-
-    .logo-text {
-      background: linear-gradient(90deg, var(--color-primary) 40%, var(--color-success) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  .dark-mode-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--color-text);
-    font-size: var(--text-lg);
-    padding: var(--space-xs);
-    border-radius: var(--radius-full);
-
-    &:hover {
-      color: var(--color-primary);
-      background: rgba(37, 99, 235, 0.1);
-    }
-  }
-}
-
-.home-hero {
-  padding: var(--space-xxl) var(--space-lg);
-  text-align: center;
-
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-
-    h1 {
-      font-size: var(--text-4xl);
-      font-weight: 800;
-      line-height: 1.2;
-      margin-bottom: var(--space-md);
-
-      .primary-gradient {
-        background: linear-gradient(90deg, var(--color-primary) 40%, var(--color-success) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-    }
-
-    .hero-subtitle {
-      font-size: var(--text-xl);
-      font-weight: 600;
-      color: var(--color-primary);
-      margin-bottom: var(--space-lg);
-    }
-
-    .hero-description {
-      color: var(--color-text-light);
-      font-size: var(--text-lg);
-      max-width: 700px;
-      margin: 0 auto var(--space-xl);
-    }
-  }
-}
-
-.btn-primary {
-  @include button-base;
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: white;
-  font-size: var(--text-lg);
-  padding: var(--space-md) var(--space-xl);
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
-  }
-}
-
-.home-platforms {
-  padding: var(--space-xxl) 0;
-
-  .section-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 var(--space-lg);
-
-    h2 {
-      text-align: center;
-      font-size: var(--text-3xl);
-      font-weight: 700;
-      margin-bottom: var(--space-xl);
-    }
-
-    .platform-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: var(--space-lg);
-
-      .platform-card {
-        background: var(--color-card);
-        border-radius: var(--radius-xl);
-        padding: var(--space-lg);
-        box-shadow: var(--shadow-md);
-        transition: all var(--transition-fast);
-        border: 1px solid var(--color-border);
-
-        &:hover {
-          transform: translateY(-5px);
-          box-shadow: var(--shadow-lg);
-          border-color: var(--color-primary);
-        }
-
-        .platform-icon {
-          font-size: 2.5rem;
-          margin-bottom: var(--space-md);
-        }
-
-        .platform-info {
-          h3 {
-            font-size: var(--text-xl);
-            font-weight: 700;
-            margin-bottom: var(--space-xs);
-          }
-
-          p {
-            color: var(--color-text-light);
-            font-size: var(--text-base);
-          }
-        }
-
-        &.coming-soon {
-          opacity: 0.7;
-          cursor: not-allowed;
-
-          &:hover {
-            transform: none;
-            box-shadow: var(--shadow-md);
-            border-color: var(--color-border);
-          }
-        }
-
-        .platform-badge {
-          position: absolute;
-          top: var(--space-lg);
-          right: var(--space-lg);
-          background: var(--color-primary);
-          color: white;
-          font-weight: 600;
-          font-size: var(--text-sm);
-          padding: var(--space-xs) var(--space-sm);
-          border-radius: var(--radius-full);
-        }
-      }
-    }
-  }
-}
-
-.toast-coming-soon {
-  position: fixed;
-  left: 50%;
-  bottom: 80px;
-  transform: translateX(-50%);
-  background: var(--color-card);
-  color: var(--color-text);
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-base);
-  font-weight: 500;
-  z-index: 1000;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border);
-  animation: toastFade 3s ease-in-out;
-
-  @keyframes toastFade {
-    0%, 100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    10%, 90% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
-}
-
-// Downloader Styles for Facebook
-@include downloader-styles("fb", map-get($colors, primary));
-
-// Downloader Styles for Instagram
-@include downloader-styles("insta", map-get($colors, primary-instagram));
-
 // Downloader Styles for TikTok
 @include downloader-styles("tiktok", map-get($colors, primary-tiktok));
 
 // Responsive Design
 @media (max-width: 768px) {
-  .home-hero {
-    padding: var(--space-xl) var(--space-md);
-
-    h1 {
-      font-size: var(--text-3xl);
-    }
-
-    .hero-subtitle {
-      font-size: var(--text-lg);
-    }
-
-    .hero-description {
-      font-size: var(--text-base);
-    }
-  }
-
-  .home-platforms {
-    padding: var(--space-xl) 0;
-
-    h2 {
-      font-size: var(--text-2xl);
-    }
-
-    .platform-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .fb-input-group,
-  .insta-input-group,
   .tiktok-input-group {
     padding: var(--space-sm) 0;
 
-    .fb-btn,
-    .insta-btn,
     .tiktok-btn {
       padding: var(--space-md);
       font-size: var(--text-sm);
     }
-  }
-}
-
-@media (max-width: 480px) {
-  .home-header .home-logo .logo-text {
-    font-size: var(--text-lg);
-  }
-
-  .btn-primary {
-    width: 100%;
-    padding: var(--space-md);
   }
 }

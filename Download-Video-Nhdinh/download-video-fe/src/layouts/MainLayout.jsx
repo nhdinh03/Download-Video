@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
 import DownloaderMenu from "../components/DownloaderMenu/DownloaderMenu";
 import "./MainLayout.scss";
 import { Link, useLocation } from "react-router-dom";
-import { FaMoon, FaSun } from "react-icons/fa";
+
 
 export default function MainLayout({ children }) {
   const location = useLocation();

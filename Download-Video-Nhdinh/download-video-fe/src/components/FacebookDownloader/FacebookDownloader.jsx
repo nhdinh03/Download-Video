@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FaFacebook,
   FaDownload,
@@ -26,7 +26,6 @@ const FacebookDownloader = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
-  const navigate = useNavigate();
   const location = useLocation();
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
@@ -132,17 +131,17 @@ const FacebookDownloader = () => {
         setTimeout(handleDownload, 2000);
       }
     };
-  }, [url, videoTitle, previewUrl, progress , isValidFacebookUrl]);
-  
-const handleCopy = useCallback(() => {
+  }, [url, videoTitle, progress, isValidFacebookUrl]);
+
+  const handleCopy = useCallback(() => {
     if (navigator.clipboard && previewUrl) {
-        navigator.clipboard.writeText(previewUrl);
-        setSuccess("Link đã được sao chép!");
-        setTimeout(() => setSuccess(""), 1500);
+      navigator.clipboard.writeText(previewUrl);
+      setSuccess("Link đã được sao chép!");
+      setTimeout(() => setSuccess(""), 1500);
     } else {
-        setError("Không thể sao chép link!");
+      setError("Không thể sao chép link!");
     }
-}, [previewUrl]);
+  }, [previewUrl]);
 
   const handleBack = () => {
     setUrl("");
@@ -313,8 +312,8 @@ const handleCopy = useCallback(() => {
           </div>
         )}
         <div className="fb-powered">
-          © {new Date().getFullYear()} Nhdinh Facebook Video Downloader.
-          All rights reserved.
+          © {new Date().getFullYear()} Nhdinh Facebook Video Downloader. All
+          rights reserved.
         </div>
       </div>
     </div>

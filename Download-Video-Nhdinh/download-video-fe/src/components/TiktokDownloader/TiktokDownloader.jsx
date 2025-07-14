@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import  { useState, useCallback, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
   FaTiktok,
@@ -8,8 +8,6 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaArrowLeft,
-  FaMoon,
-  FaSun,
 } from "react-icons/fa";
 import "./TiktokDownloader.scss";
 

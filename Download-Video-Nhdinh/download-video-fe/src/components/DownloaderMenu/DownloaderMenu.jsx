@@ -5,8 +5,8 @@ import {
   FaInstagram,
   FaTiktok,
   FaTwitter,
-  FaYoutube,
   FaAt,
+  FaYoutube,
 } from "react-icons/fa";
 import "./DownloaderMenu.scss";
 
@@ -33,9 +33,10 @@ const platforms = [
     color: "#000000"
   },
   {
-    name: "Twitter",
-    path: "/download/twitter",
+    name: "x (Twitter)",
+    path: "/download/x(twitter)",
     icon: <FaTwitter />,
+    //https://upload.wikimedia.org/wikipedia/commons/c/cc/X_icon.svg
     active: false,
     color: "#1da1f2"
   },
@@ -63,7 +64,7 @@ function DownloaderMenu() {
 
   useEffect(() => {
     if (toast) {
-      const t = setTimeout(() => setToast(""), 2200);
+      const t = setTimeout(() => setToast(""), 3000);
       return () => clearTimeout(t);
     }
   }, [toast]);
@@ -81,50 +82,41 @@ function DownloaderMenu() {
       navigate(platform.path);
     } else {
       setToast(`"${platform.name}" đang được phát triển. Quay lại sau nhé!`);
-      if (selectRef.current) {
-        selectRef.current.value = "";
-      }
+    }
+    if (selectRef.current) {
+      selectRef.current.value = "";
     }
   };
 
   return (
     <>
-      <nav className="downloader-menu" >
+      <nav className="downloader-menu">
         {platforms.map((p) =>
           p.active ? (
             <Link
               key={p.name}
               to={p.path}
-              className={`downloader-menu-item${
-                location.pathname === p.path ? " active" : ""
-              }`}
+              className={`downloader-menu-item${location.pathname === p.path ? " active" : ""}`}
               aria-label={`Tải video từ ${p.name}`}
               style={{ "--platform-color": p.color }}
             >
               {p.icon} <span>{p.name}</span>
             </Link>
           ) : (
-            <a
+            <button
               key={p.name}
-              href={p.path}
               className="downloader-menu-item coming-soon"
               onClick={(e) => handleComingSoon(p.name, e)}
-              tabIndex={0}
               aria-label={`${p.name} đang được phát triển`}
               style={{ "--platform-color": p.color }}
             >
               {p.icon} <span>{p.name}</span> <span className="badge-soon">Đang phát triển</span>
-            </a>
+            </button>
           )
         )}
       </nav>
       <div className="downloader-menu-mobile">
-        <select
-          className="platform-select"
-          onChange={handlePlatformSelect}
-          ref={selectRef}
-          aria-label="Chọn nền tảng để tải video"
-        >
+        <select ref={selectRef} onChange={handlePlatformSelect} aria-label="Chọn nền tảng">
           <option value="">Chọn nền tảng</option>
           {platforms.map((p, index) => (
             <option key={p.name} value={index}>
@@ -134,7 +126,7 @@ function DownloaderMenu() {
         </select>
       </div>
       {toast && (
-        <div className="toast-coming-soon" role="alert">
+        <div className="toast-coming-soon" role="alert" aria-live="polite">
           {toast}
         </div>
       )}

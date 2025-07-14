@@ -1,4 +1,4 @@
-// DownloaderMenu.scss - Dark Mode Compatible
+// DownloaderMenu.scss - Dark Mode Compatible, Responsive Upgrades
 
 // Design Tokens
 :root {
@@ -61,33 +61,34 @@
     font-weight: 600;
     text-decoration: none;
     font-size: clamp(0.9rem, 2vw, 1rem);
-    transition: transform 0.2s, box-shadow 0.18s, background 0.16s, color 0.16s;
+    transition: transform 0.2s ease-out, box-shadow 0.18s ease-out, background 0.16s ease-out, color 0.16s ease-out;
     box-shadow: 0 1px 5px var(--shadow-light);
     border: 1px solid var(--border-color-light);
+    cursor: pointer;
     
     svg {
       color: var(--platform-color);
       font-size: clamp(1.2rem, 3vw, 1.3rem);
-      transition: transform 0.2s;
+      transition: transform 0.2s ease-out;
     }
 
     span {
-      transition: color 0.16s;
+      transition: color 0.16s ease-out;
     }
 
     &:hover {
       background: var(--background-hover-light);
       box-shadow: 0 2px 14px var(--shadow-hover-light);
-      transform: scale(1.05);
+      transform: translateY(-2px) scale(1.02);
       
       svg {
-        transform: scale(1.15);
+        transform: scale(1.1) rotate(5deg);
       }
     }
 
     &.active {
       background: var(--background-hover-light);
-      box-shadow: 0 0 0 2px var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px var(--shadow-hover-light);
       
       span {
         color: var(--primary-color);
@@ -95,58 +96,54 @@
     }
 
     &.coming-soon {
-      opacity: 0.75;
-      cursor: pointer;
+      opacity: 0.85;
       position: relative;
-      pointer-events: auto;
-      filter: grayscale(0.7);
+      filter: saturate(0.8);
 
       .badge-soon {
         margin-left: 8px;
-        background: var(--badge-color);
+        background: linear-gradient(135deg, var(--badge-color), #ff9800);
         color: #222;
         border-radius: 10px;
         font-size: 0.89em;
         padding: 2px 9px;
         font-weight: 600;
         box-shadow: 0 1px 4px rgba(255, 193, 7, 0.08);
+        transition: transform 0.2s;
+      }
+
+      &:hover .badge-soon {
+        transform: scale(1.05);
       }
     }
   }
 }
 
-// Mobile menu styles
+// Mobile menu
 .downloader-menu-mobile {
   display: none;
-  text-align: center;
-  margin: 20px 0;
+  justify-content: center;
+  margin: 20px 0 36px 0;
   padding: 0 16px;
 
-  .platform-select {
-    padding: 12px 16px;
+  select {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 20px;
     border-radius: 12px;
-    border: 1px solid var(--border-color-light);
     background: var(--card-bg-light);
     color: var(--text-color-light);
     font-size: 1rem;
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
+    font-weight: 600;
+    border: 1px solid var(--border-color-light);
+    box-shadow: 0 1px 5px var(--shadow-light);
     appearance: none;
-    -webkit-appearance: none;
-    background-image: url('data:image/svg+xml;utf8,<svg fill="%231877f3" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    transition: all 0.2s ease;
-    
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+
     &:focus {
       outline: none;
       box-shadow: 0 0 0 2px var(--primary-color);
-    }
-    
-    option {
-      background: var(--card-bg-light);
-      color: var(--text-color-light);
     }
   }
 }
@@ -165,62 +162,44 @@
   font-weight: 500;
   z-index: 2002;
   box-shadow: 0 4px 28px 0 var(--toast-shadow-light);
-  animation: fadeInOut 2.2s;
+  animation: fadeInOut 2.8s ease-in-out;
   border: 1px solid var(--border-color-light);
+  max-width: 90%;
+  text-align: center;
   
   @keyframes fadeInOut {
     0% {
       opacity: 0;
-      bottom: 30px;
+      transform: translate(-50%, 20px);
     }
     10% {
       opacity: 1;
-      bottom: 44px;
+      transform: translate(-50%, 0);
     }
     90% {
       opacity: 1;
+      transform: translate(-50%, 0);
     }
     100% {
       opacity: 0;
-      bottom: 60px;
+      transform: translate(-50%, -20px);
     }
   }
 }
 
-// Media queries
+// Media queries for responsiveness
 @media (max-width: 768px) {
   .downloader-menu {
     display: none;
   }
+
   .downloader-menu-mobile {
-    display: block;
+    display: flex;
   }
 }
 
 @media (min-width: 769px) {
-  .downloader-menu {
-    display: flex;
-  }
   .downloader-menu-mobile {
     display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .downloader-menu {
-    gap: 12px;
-    
-    .downloader-menu-item {
-      padding: 10px 16px;
-      font-size: 0.85rem;
-      
-      .badge-soon {
-        font-size: 0.75rem;
-      }
-    }
-  }
-  
-  .downloader-menu-mobile .platform-select {
-    font-size: 0.9rem;
   }
 }
