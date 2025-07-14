@@ -167,7 +167,7 @@ public class TiktokVideoController {
 
     @GetMapping(value = "/download/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamDownload(@RequestParam String url) {
-        if (url == null || url.length() > 2048 || !url.matches("https?://(www\\.)?(tiktok\\.com|vm\\.tiktok\\.com)/.*")) {
+        if (url == null || url.length() > 2048 || !url.matches("https?://(www\\.)?(tiktok\\.com|vm\\.tiktok\\.com|vt\\.tiktok\\.com)/.*")) {
             logger.warn("Invalid URL: {}", url);
             SseEmitter emitter = new SseEmitter(0L);
             try {
@@ -274,7 +274,7 @@ public class TiktokVideoController {
         String tiktokUrl = payload.get("url");
         logger.info("Received preview request for URL: {}", tiktokUrl);
 
-        if (tiktokUrl == null || tiktokUrl.length() > 2048 || !tiktokUrl.matches("https?://(www\\.)?(tiktok\\.com|vm\\.tiktok\\.com)/.*")) {
+        if (tiktokUrl == null || tiktokUrl.length() > 2048 || !tiktokUrl.matches("https?://(www\\.)?(tiktok\\.com|vm\\.tiktok\\.com|vt\\.tiktok\\.com)/.*")) {
             logger.warn("Invalid TikTok URL: {}", tiktokUrl);
             return ResponseEntity.badRequest().body(Map.of("error", ErrorMessage.INVALID_URL.getMessage()));
         }

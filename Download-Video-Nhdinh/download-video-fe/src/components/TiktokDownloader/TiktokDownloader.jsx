@@ -35,7 +35,8 @@ const TiktokDownloader = () => {
       const urlObj = new URL(cleaned);
       return (
         urlObj.hostname.includes("tiktok.com") ||
-        urlObj.hostname.includes("vm.tiktok.com")
+        urlObj.hostname.includes("vm.tiktok.com")||
+        urlObj.hostname.includes("vt.tiktok.com")
       );
     } catch {
       return false;
