@@ -284,11 +284,10 @@ const InstagramDownloader = () => {
 
         <br />
         {!previewUrl && (
-          <div className="insta-guide">
-            <b>Hướng dẫn:</b> Hãy dán link video Instagram vào ô trên{" "}
-            {isMobile && "(nhấn giữ để dán trên điện thoại)"}, sau đó bấm{" "}
-            <b>Dán & Xem trước</b> → khi video hiện ra, bấm <b>Lưu về máy</b> để
-            tải.
+         <div className="insta-guide">
+            <b>Hướng dẫn:</b> Dán link video instagram vào ô trên{" "}
+            {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
+            → khi video hiện, bấm <b>Lưu về máy</b>.
           </div>
         )}
 

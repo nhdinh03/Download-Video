@@ -8,7 +8,6 @@ import TiktokDownloader from "./components/TiktokDownloader/TiktokDownloader";
 import TwitterDownloader from "./components/TwitterDownloader/TwitterDownloader";
 import ThreadsDownloader from "./components/ThreadsDownloader/ThreadsDownloader";
 import YoutubeDownloader from "./components/YoutubeDownloader/YoutubeDownloader";
-// import Downloadhistory from "./pages/DownloadHistory/downloadhistory";
 import NotFound from "./pages/NotFound/NotFound";
 import Guide from "./pages/Guide/Guide";
 
@@ -25,7 +24,6 @@ function App() {
           <Route path="/download/twitter" element={<TwitterDownloader />} />
           <Route path="/download/threads" element={<ThreadsDownloader />} />
           <Route path="/download/youtube" element={<YoutubeDownloader />} />
-          {/* <Route path="/download/history" element={<Downloadhistory />} /> */}
           <Route path="/guide" element={<Guide />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

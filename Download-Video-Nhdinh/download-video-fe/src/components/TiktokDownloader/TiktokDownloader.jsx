@@ -318,10 +318,9 @@ const TiktokDownloader = () => {
         <br />
         {!thumbnail && (
           <div className="tiktok-guide">
-            <b>Hướng dẫn:</b> Dán link video TikTok vào ô trên{" "}
+            <b>Hướng dẫn:</b> Dán link video tiktok vào ô trên{" "}
             {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
-            → khi preview hiện (ưu tiên video nếu có), bấm <b>Lưu về máy</b>.
-            Nếu xem trước thất bại, thử tải trực tiếp.
+            → khi video hiện, bấm <b>Lưu về máy</b>.
           </div>
         )}
 

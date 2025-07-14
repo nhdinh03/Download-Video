@@ -24,9 +24,6 @@ export default function MainLayout({ children }) {
               <NavLink to="/guide" currentPath={location.pathname}>
                 Hướng dẫn
               </NavLink>
-              <NavLink to="/download/history" currentPath={location.pathname}>
-                Lịch sử
-              </NavLink>
             </nav>
           </div>
 
