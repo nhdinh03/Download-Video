@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaFacebook,
@@ -33,10 +33,9 @@ const platforms = [
     color: "#000000"
   },
   {
-    name: "x (Twitter)",
+    name: "X (Twitter)",
     path: "/download/x(twitter)",
     icon: <FaTwitter />,
-    //https://upload.wikimedia.org/wikipedia/commons/c/cc/X_icon.svg
     active: false,
     color: "#1da1f2"
   },
@@ -48,7 +47,7 @@ const platforms = [
     color: "#000000"
   },
   {
-    name: "Youtube",
+    name: "YouTube",
     path: "/download/youtube",
     icon: <FaYoutube />,
     active: false,
@@ -60,7 +59,7 @@ function DownloaderMenu() {
   const location = useLocation();
   const navigate = useNavigate();
   const [toast, setToast] = useState("");
-  const selectRef = useRef(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (toast) {
@@ -69,28 +68,22 @@ function DownloaderMenu() {
     }
   }, [toast]);
 
-  const handleComingSoon = (name, e) => {
-    e.preventDefault();
+  const handleComingSoon = (name) => {
     setToast(`"${name}" đang được phát triển. Quay lại sau nhé!`);
   };
 
-  const handlePlatformSelect = (e) => {
-    const index = parseInt(e.target.value, 10);
-    if (isNaN(index)) return;
-    const platform = platforms[index];
+  const handlePlatformSelect = (platform) => {
     if (platform.active) {
       navigate(platform.path);
     } else {
-      setToast(`"${platform.name}" đang được phát triển. Quay lại sau nhé!`);
+      handleComingSoon(platform.name);
     }
-    if (selectRef.current) {
-      selectRef.current.value = "";
-    }
+    setIsMobileMenuOpen(false);
   };
 
   return (
     <>
-      <nav className="downloader-menu">
+      <nav className="downloader-menu desktop-menu">
         {platforms.map((p) =>
           p.active ? (
             <Link
@@ -106,7 +99,7 @@ function DownloaderMenu() {
             <button
               key={p.name}
               className="downloader-menu-item coming-soon"
-              onClick={(e) => handleComingSoon(p.name, e)}
+              onClick={() => handleComingSoon(p.name)}
               aria-label={`${p.name} đang được phát triển`}
               style={{ "--platform-color": p.color }}
             >
@@ -116,14 +109,29 @@ function DownloaderMenu() {
         )}
       </nav>
       <div className="downloader-menu-mobile">
-        <select ref={selectRef} onChange={handlePlatformSelect} aria-label="Chọn nền tảng">
-          <option value="">Chọn nền tảng</option>
-          {platforms.map((p, index) => (
-            <option key={p.name} value={index}>
-              {p.name} {p.active ? "" : "(Đang phát triển)"}
-            </option>
-          ))}
-        </select>
+        <button
+          className="menu-toggle"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Mở menu chọn nền tảng"
+          aria-expanded={isMobileMenuOpen}
+        >
+          ≡
+        </button>
+        {isMobileMenuOpen && (
+          <div className="mobile-menu-dropdown" role="menu">
+            {platforms.map((p) => (
+              <button
+                key={p.name}
+                className={`mobile-menu-item${!p.active ? " disabled" : ""}${location.pathname === p.path ? " active" : ""}`}
+                onClick={() => handlePlatformSelect(p)}
+                aria-label={`Chọn ${p.name}${!p.active ? " (Đang phát triển)" : ""}`}
+                role="menuitem"
+              >
+                {p.icon} <span>{p.name}</span> {!p.active && <span className="badge-soon-mobile">(Đang phát triển)</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {toast && (
         <div className="toast-coming-soon" role="alert" aria-live="polite">

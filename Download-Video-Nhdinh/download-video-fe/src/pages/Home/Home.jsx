@@ -20,7 +20,7 @@ const platforms = [
     icon: <FaFacebook />,
     desc: "Tải video Facebook tốc độ cao, chất lượng HD.",
     active: true,
-    color: "#1877f3"
+    color: "#1877f3",
   },
   {
     name: "Instagram",
@@ -28,7 +28,7 @@ const platforms = [
     icon: <FaInstagram />,
     desc: "Tải video, reels và stories từ Instagram.",
     active: true,
-    color: "#E1306C"
+    color: "#E1306C",
   },
   {
     name: "TikTok",
@@ -36,7 +36,7 @@ const platforms = [
     icon: <FaTiktok />,
     desc: "Tải video TikTok không watermark, nhanh chóng.",
     active: true,
-    color: "#000"
+    color: "#000",
   },
   {
     name: "Threads",
@@ -44,7 +44,7 @@ const platforms = [
     icon: <FaAt />,
     desc: "Đang phát triển hỗ trợ tải từ Threads.",
     active: false,
-    color: "#222"
+    color: "#222",
   },
   {
     name: "Twitter",
@@ -52,7 +52,7 @@ const platforms = [
     icon: <FaTwitter />,
     desc: "Đang phát triển tải video từ Twitter/X.",
     active: false,
-    color: "#1da1f2"
+    color: "#1da1f2",
   },
   {
     name: "Youtube",
@@ -60,63 +60,32 @@ const platforms = [
     icon: <FaYoutube />,
     desc: "Đang phát triển tính năng tải video YouTube.",
     active: false,
-    color: "#ff0000"
+    color: "#ff0000",
   },
 ];
 
 function Home() {
   const [toast, setToast] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => setToast(""), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
-    localStorage.setItem("darkMode", darkMode.toString());
-  }, [darkMode]);
 
   const handleComingSoon = (name, e) => {
     e.preventDefault();
     setToast(`"${name}" đang được phát triển. Hãy quay lại sau nhé!`);
   };
-
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
-  };
-
   return (
     <div className="home-root">
-      <header className="home-header">
-        <div className="header-container">
-          <span className="home-logo">
-            <span className="logo-icon"><FaDownload /></span>
-            <span className="logo-text">Nhđinh Video Downloader Pro</span>
-          </span>
-  
-          <button
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
-          >
-            {darkMode ? <FaSun /> : <FaMoon />}
-          </button>
-        </div>
-      </header>
-
       <section className="home-hero">
         <div className="hero-content">
           <h1>
-            Tải Video <span className="primary-gradient">Facebook, Instagram, TikTok</span>
+            Tải Video{" "}
+            <span className="primary-gradient">
+              Facebook, Instagram, TikTok
+            </span>
           </h1>
           <p className="hero-subtitle">Miễn phí • Nhanh chóng • An toàn</p>
           <p className="hero-description">
             Chỉ cần dán link video, chọn nền tảng và tải về ngay lập tức! <br />
-            Hỗ trợ đầy đủ các nền tảng phổ biến: Facebook, Instagram, TikTok, và nhiều hơn nữa sắp ra mắt.
+            Hỗ trợ đầy đủ các nền tảng phổ biến: Facebook, Instagram, TikTok, và
+            nhiều hơn nữa sắp ra mắt.
           </p>
           <Link
             className="btn-primary"
@@ -133,10 +102,12 @@ function Home() {
           <h2>Các nền tảng hỗ trợ</h2>
           <div className="platform-grid">
             {platforms.map((p) => (
-              <div 
-                className={`platform-card ${p.active ? "" : "coming-soon"}`} 
+              <div
+                className={`platform-card ${p.active ? "" : "coming-soon"}`}
                 key={p.name}
-                onClick={!p.active ? (e) => handleComingSoon(p.name, e) : undefined}
+                onClick={
+                  !p.active ? (e) => handleComingSoon(p.name, e) : undefined
+                }
               >
                 <div className="platform-icon" style={{ color: p.color }}>
                   {p.icon}
@@ -145,9 +116,7 @@ function Home() {
                   <h3>{p.name}</h3>
                   <p>{p.desc}</p>
                 </div>
-                {!p.active && (
-                  <div className="platform-badge">Sắp ra mắt</div>
-                )}
+                {!p.active && <div className="platform-badge">Sắp ra mắt</div>}
               </div>
             ))}
           </div>
@@ -175,12 +144,6 @@ function Home() {
           </div>
         </div>
       </footer> */}
-
-      {toast && (
-        <div className="toast-coming-soon" role="alert" aria-live="polite">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

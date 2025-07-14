@@ -1,205 +1,240 @@
-// DownloaderMenu.scss - Dark Mode Compatible, Responsive Upgrades
+// DownloaderMenu.scss - Enhanced for Professional, Modern UI with Full Responsiveness
 
-// Design Tokens
+// Design Tokens - Aligned with MainLayout for consistency
 :root {
-  // Colors
-  --primary-color: #1877f3;
-  --background-light: #f5f7fa;
-  --background-dark: #1e1e1e;
-  --background-hover-light: #eaf4ff;
-  --background-hover-dark: #2d2d2d;
-  --text-color-light: #222;
-  --text-color-dark: #e0e0e0;
-  --card-bg-light: #ffffff;
-  --card-bg-dark: #2a2a2a;
-  --border-color-light: #e0e0e0;
-  --border-color-dark: #444;
-  --badge-color: #ffc107;
-  --toast-bg-light: #222;
-  --toast-bg-dark: #f5f5f5;
-  --toast-text-light: #fff;
-  --toast-text-dark: #222;
-  --toast-shadow-light: rgba(0, 0, 0, 0.09);
-  --toast-shadow-dark: rgba(0, 0, 0, 0.2);
-  
-  // Shadows
-  --shadow-light: rgba(24, 119, 243, 0.03);
-  --shadow-hover-light: rgba(24, 119, 243, 0.08);
-  --shadow-hover-dark: rgba(24, 119, 243, 0.15);
+  // Inherit from MainLayout, add specific ones
+  --badge-bg: #fde047;
+  --badge-text: #713f12;
+  --disabled-opacity: 0.7;
 }
 
-.dark-mode {
-  --background-light: var(--background-dark);
-  --background-hover-light: var(--background-hover-dark);
-  --text-color-light: var(--text-color-dark);
-  --card-bg-light: var(--card-bg-dark);
-  --border-color-light: var(--border-color-dark);
-  --toast-bg-light: var(--toast-bg-dark);
-  --toast-text-light: var(--toast-text-dark);
-  --toast-shadow-light: var(--toast-shadow-dark);
-  --shadow-light: rgba(24, 119, 243, 0.15);
-  --shadow-hover-light: var(--shadow-hover-dark);
-}
-
-// Menu styles
+// Menu styles - Flex with wrap for better tablet support
 .downloader-menu {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: var(--space-md);
   justify-content: center;
-  margin: 20px 0 36px 0;
-  padding: 0 16px;
+  margin: var(--space-md) 0 var(--space-xl) 0;
+  padding: 0 var(--space-sm);
 
   .downloader-menu-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: var(--text-color-light);
-    background: var(--card-bg-light);
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 600;
+    gap: var(--space-sm);
+    color: var(--color-text);
+    background: var(--color-card);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-lg);
+    font-weight: var(--font-semibold);
     text-decoration: none;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    transition: transform 0.2s ease-out, box-shadow 0.18s ease-out, background 0.16s ease-out, color 0.16s ease-out;
-    box-shadow: 0 1px 5px var(--shadow-light);
-    border: 1px solid var(--border-color-light);
+    font-size: var(--text-base);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
     cursor: pointer;
+    min-width: 140px;
+    justify-content: center;
     
     svg {
       color: var(--platform-color);
-      font-size: clamp(1.2rem, 3vw, 1.3rem);
-      transition: transform 0.2s ease-out;
+      font-size: var(--text-xl);
+      transition: transform var(--transition-fast);
     }
 
     span {
-      transition: color 0.16s ease-out;
+      transition: color var(--transition-fast);
     }
 
     &:hover {
-      background: var(--background-hover-light);
-      box-shadow: 0 2px 14px var(--shadow-hover-light);
-      transform: translateY(-2px) scale(1.02);
+      background: var(--color-bg-alt);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px) scale(1.03);
       
       svg {
-        transform: scale(1.1) rotate(5deg);
+        transform: scale(1.15) rotate(8deg);
       }
     }
 
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+
     &.active {
-      background: var(--background-hover-light);
-      box-shadow: 0 0 0 2px var(--primary-color), 0 4px 12px var(--shadow-hover-light);
+      background: linear-gradient(to bottom, var(--color-bg-alt), var(--color-card));
+      box-shadow: 0 0 0 2px var(--color-primary), var(--shadow-md);
       
       span {
-        color: var(--primary-color);
+        color: var(--color-primary);
       }
     }
 
     &.coming-soon {
-      opacity: 0.85;
-      position: relative;
-      filter: saturate(0.8);
+      opacity: var(--disabled-opacity);
+      filter: saturate(0.6);
+      cursor: not-allowed;
 
       .badge-soon {
-        margin-left: 8px;
-        background: linear-gradient(135deg, var(--badge-color), #ff9800);
-        color: #222;
-        border-radius: 10px;
-        font-size: 0.89em;
-        padding: 2px 9px;
-        font-weight: 600;
-        box-shadow: 0 1px 4px rgba(255, 193, 7, 0.08);
-        transition: transform 0.2s;
+        margin-left: var(--space-sm);
+        background: var(--badge-bg);
+        color: var(--badge-text);
+        border-radius: var(--radius-md);
+        font-size: var(--text-xs);
+        padding: var(--space-xxs) var(--space-sm);
+        font-weight: var(--font-medium);
+        box-shadow: var(--shadow-sm);
+        transition: transform var(--transition-fast);
       }
 
       &:hover .badge-soon {
-        transform: scale(1.05);
+        transform: scale(1.1);
       }
     }
   }
 }
 
-// Mobile menu
+// Mobile menu - Improved dropdown with overlay close
 .downloader-menu-mobile {
-  display: none;
-  justify-content: center;
-  margin: 20px 0 36px 0;
-  padding: 0 16px;
+  display: relative;
+  justify-content: flex-end;
+  padding: 0 var(--space-sm);
+  position: relative;
 
-  select {
-    width: 100%;
-    max-width: 300px;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background: var(--card-bg-light);
-    color: var(--text-color-light);
-    font-size: 1rem;
-    font-weight: 600;
-    border: 1px solid var(--border-color-light);
-    box-shadow: 0 1px 5px var(--shadow-light);
-    appearance: none;
+  .menu-toggle {
+    background: transparent;
+    border: var(--color-text);
+    font-size: var(--text-2xl);
+    padding: var(--space-xs) var(--space-sm);
     cursor: pointer;
-    transition: box-shadow 0.2s;
-
-    &:focus {
+    color: var(--color-text);
+    border: none;
+    transition: transform var(--transition-fast);
+    
+    &:hover {
+      transform: scale(1.95);
+    }
+    
+    &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99,235, 0.3);
+    }
+  }
+
+  .mobile-menu-dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-xs));
+    right: 0;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-sm);
+    min-width: 220px;
+    z-index: 50;
+    overflow: hidden;
+
+    .mobile-menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      font-size: var(--text-base);
+      color: var(--color-text);
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+
+      svg {
+        color: var(--platform-color);
+        font-size: var(--text-xl);
+      }
+
+      &:hover {
+        background: var(--color-bg-alt);
+        transform: translateX(5px);
+      }
+
+      &:focus-visible {
+        background: var(--color-bg-alt);
+        outline: none;
+      }
+
+      &.active {
+        background: var(--color-bg-alt);
+        color: var(--color-primary);
+      }
+
+      &.disabled {
+        color: var(--color-text-light);
+        cursor: not-allowed;
+        opacity: var(--disabled-opacity);
+
+        &:hover {
+          background: none;
+          transform: none;
+        }
+
+        .badge-soon-mobile {
+          font-size: var(--text-xs);
+          color: var(--badge-text);
+        }
+      }
     }
   }
 }
 
-// Toast styles
-.toast-coming-soon {
-  position: fixed;
-  left: 50%;
-  bottom: 44px;
-  transform: translateX(-50%);
-  background: var(--toast-bg-light);
-  color: var(--toast-text-light);
-  padding: 12px 28px;
-  border-radius: 12px;
-  font-size: clamp(0.9rem, 2vw, 1.08rem);
-  font-weight: 500;
-  z-index: 2002;
-  box-shadow: 0 4px 28px 0 var(--toast-shadow-light);
-  animation: fadeInOut 2.8s ease-in-out;
-  border: 1px solid var(--border-color-light);
-  max-width: 90%;
-  text-align: center;
-  
-  @keyframes fadeInOut {
-    0% {
-      opacity: 0;
-      transform: translate(-50%, 20px);
-    }
-    10% {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-    90% {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-    100% {
-      opacity: 0;
-      transform: translate(-50%, -20px);
-    }
-  }
-}
+// Toast - Reuse from MainLayout for consistency
 
-// Media queries for responsiveness
-@media (max-width: 768px) {
-  .downloader-menu {
+// Media queries - Enhanced breakpoints
+.desktop-menu {
+  @media (max-width: 768px) {
     display: none;
   }
+}
 
-  .downloader-menu-mobile {
+.downloader-menu-mobile {
+  display: none;
+
+  @media (max-width: 767px) {
     display: flex;
   }
 }
 
-@media (min-width: 769px) {
-  .downloader-menu-mobile {
-    display: none;
+@media (max-width: 1024px) {
+  .downloader-menu {
+    gap: var(--space-sm);
+    padding: 0 var(--space-md);
+  }
+
+  .downloader-menu-item {
+    min-width: 120px;
+    font-size: var(--text-sm);
+  }
+}
+
+@media (max-width: 640px) {
+  .mobile-menu-dropdown {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .downloader-menu-item {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    svg {
+      font-size: var(--text-lg);
+    }
+  }
+
+  .mobile-menu-dropdown {
+    min-width: 180px;
+    .mobile-menu-item {
+      padding: var(--space-xs) var(--space-sm);
+      font-size: var(--text-sm);
+    }
   }
 }
