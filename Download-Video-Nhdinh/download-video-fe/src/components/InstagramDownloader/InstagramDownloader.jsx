@@ -1,4 +1,4 @@
-import  { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   FaInstagram,
   FaDownload,
@@ -16,9 +16,7 @@ const API_BASE =
     ? `http://${window.location.hostname}:8081/api/instagram`
     : "https://your-production-domain.com/api/instagram";
 
-
-
-  const InstagramDownloader = () => {
+const InstagramDownloader = () => {
   const [url, setUrl] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingDownload, setLoadingDownload] = useState(false);
@@ -154,8 +152,6 @@ const API_BASE =
     setVideoTitle("");
   };
 
-
-
   return (
     <div className="main-center">
       <div className="insta-downloader-root">
@@ -170,7 +166,6 @@ const API_BASE =
               Downloader
             </span>
           </div>
-
         </div>
 
         {!previewUrl && (
@@ -304,5 +299,5 @@ const API_BASE =
       </div>
     </div>
   );
-}
+};
 export default InstagramDownloader;

@@ -234,19 +234,7 @@ const FacebookDownloader = () => {
         {previewUrl && !loading.preview && (
           <div className="fb-preview-row">
             <div className="fb-preview-col fb-preview-video">
-              {videoTitle && (
-                <div
-                  className="fb-video-title"
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "1.12rem",
-                    marginBottom: 10,
-                    color: "#1b2535",
-                  }}
-                >
-                  {videoTitle}
-                </div>
-              )}
+              {videoTitle && <div className="fb-video-title">{videoTitle}</div>}
               <video
                 src={previewUrl}
                 controls
