@@ -1,4 +1,4 @@
-import  { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
   FaTiktok,
@@ -12,7 +12,15 @@ import {
 import "./TiktokDownloader.scss";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE || "http://localhost:8081/api/tiktok";
+  window.location.hostname === "localhost" ||
+  window.location.hostname.startsWith("192.168.") ||
+  window.location.hostname.startsWith("10.") ||
+  window.location.hostname.startsWith("172.")
+    ? `http://${window.location.hostname}:8081/api/tiktok`
+    : `${
+        process.env.REACT_APP_API_BASE ||
+        "https://your-production-domain.com/api/tiktok"
+      }`;
 
 const TiktokDownloader = () => {
   const [url, setUrl] = useState("");
@@ -35,7 +43,7 @@ const TiktokDownloader = () => {
       const urlObj = new URL(cleaned);
       return (
         urlObj.hostname.includes("tiktok.com") ||
-        urlObj.hostname.includes("vm.tiktok.com")||
+        urlObj.hostname.includes("vm.tiktok.com") ||
         urlObj.hostname.includes("vt.tiktok.com")
       );
     } catch {
@@ -58,12 +66,13 @@ const TiktokDownloader = () => {
       setEmbedHtml("");
       setVideoUrl("");
       let data = null;
+      const abortController = new AbortController(); // Optimized: Use AbortController for better cancel on network change
       try {
         const res = await fetch(`${API_BASE}/preview`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: inputUrl }),
-          signal: AbortSignal.timeout(10000),
+          signal: abortController.signal, // Replace timeout with signal for mobile flaky networks
         });
         data = await res.json();
         if (!res.ok) {
@@ -74,11 +83,14 @@ const TiktokDownloader = () => {
         setEmbedHtml(data.embedHtml || "");
         setVideoUrl(data.videoUrl || "");
       } catch (err) {
-        setError(`Lỗi: ${err.message || "Không thể lấy thông tin video."}`);
+        if (err.name !== "AbortError") {
+          setError(`Lỗi: ${err.message || "Không thể lấy thông tin video."}`);
+        }
         if (data && data.thumbnail) setThumbnail(data.thumbnail);
       } finally {
         setLoading((prev) => ({ ...prev, preview: false }));
       }
+      return () => abortController.abort(); // Cleanup
     },
     [url, isValidTiktokUrl]
   );

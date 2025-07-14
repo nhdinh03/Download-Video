@@ -21,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,13 +42,12 @@ import video.example.com.util.TiktokVideoUtil;
 
 @RestController
 @RequestMapping("/api/tiktok")
-@CrossOrigin(origins = "${tiktok.allowed.origins:https://your-trusted-domain.com}") // Thay bằng domain cụ thể hoặc giữ cấu hình
+@CrossOrigin(origins = "*")
 public class TiktokVideoController {
 
     private static final Logger logger = LoggerFactory.getLogger(TiktokVideoController.class);
-    private static final Set<String> ALLOWED_THUMBNAIL_DOMAINS = new HashSet<>(Arrays.asList(
-            "tiktokcdn.com", "muscdn.com"
-    ));
+    private static final Set<String> ALLOWED_THUMBNAIL_DOMAINS = new HashSet<>(Arrays.asList("tiktokcdn.com", "muscdn.com"));
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
 
     @Value("${tiktok.thread.pool.size:10}")
     private int threadPoolSize;
@@ -74,7 +75,6 @@ public class TiktokVideoController {
         );
     }
 
-    // Enum để quản lý thông báo lỗi tiếng Việt
     public enum ErrorMessage {
         INVALID_URL("URL không hợp lệ. Vui lòng kiểm tra lại định dạng URL TikTok."),
         INVALID_LINK("Không thể lấy video từ link. Vui lòng thử link khác."),
@@ -99,7 +99,6 @@ public class TiktokVideoController {
         }
     }
 
-    // Kiểm tra tính khả dụng của yt-dlp
     private boolean isYtDlpAvailable() {
         try {
             Process process = new ProcessBuilder(ytDlpPath, "--version").start();
@@ -107,7 +106,7 @@ public class TiktokVideoController {
             return exitCode == 0;
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("Failed to check yt-dlp availability: {}", e.getMessage());
+            logger.error("Failed to check yt-dlp availability: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -132,7 +131,7 @@ public class TiktokVideoController {
             return exitCode == 0;
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("Failed to check ffmpeg availability: {}", e.getMessage());
+            logger.error("Failed to check ffmpeg availability: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -158,9 +157,9 @@ public class TiktokVideoController {
         try {
             java.net.URI uri = new java.net.URI(url);
             String host = uri.getHost();
-            return host != null && (host.endsWith("tiktokcdn.com") || host.endsWith("muscdn.com"));  // Giới hạn domain an toàn
+            return host != null && (host.endsWith("tiktokcdn.com") || host.endsWith("muscdn.com"));
         } catch (java.net.URISyntaxException e) {
-            logger.warn("Invalid video URL: {}", url, e);
+            logger.warn("Invalid video URL: {}, error: {}", url, e.getMessage());
             return false;
         }
     }
@@ -173,7 +172,7 @@ public class TiktokVideoController {
             try {
                 emitter.send(SseEmitter.event().data("ERROR_" + ErrorMessage.INVALID_URL.getMessage()));
             } catch (IOException e) {
-                logger.error("Failed to send error message: {}", e.getMessage());
+                logger.error("Failed to send error message: {}", e.getMessage(), e);
             } finally {
                 emitter.complete();
             }
@@ -185,7 +184,7 @@ public class TiktokVideoController {
             try {
                 emitter.send(SseEmitter.event().data("ERROR_" + ErrorMessage.FFMPEG_UNAVAILABLE.getMessage()));
             } catch (IOException e) {
-                logger.error("Failed to send error message: {}", e.getMessage());
+                logger.error("Failed to send error message: {}", e.getMessage(), e);
             } finally {
                 emitter.complete();
             }
@@ -198,7 +197,7 @@ public class TiktokVideoController {
             try {
                 emitter.send(SseEmitter.event().data("ERROR_" + ErrorMessage.YT_DLP_UNAVAILABLE.getMessage()));
             } catch (IOException e) {
-                logger.error("Failed to send error message: {}", e.getMessage());
+                logger.error("Failed to send error message: {}", e.getMessage(), e);
             } finally {
                 emitter.complete();
             }
@@ -208,27 +207,32 @@ public class TiktokVideoController {
         SseEmitter emitter = new SseEmitter(300_000L);
         emitter.onCompletion(() -> logger.info("SSE completed for URL: {}", url));
         emitter.onTimeout(() -> {
-            emitter.complete();
             logger.warn("SSE timeout for URL: {}", url);
+            emitter.complete();
         });
 
         executorService.submit(() -> {
             int retries = 3;
             String effectiveProxy = isValidProxy(proxy) ? proxy : "";
             while (retries > 0) {
+                Process process = null;
                 try {
                     String filename = TiktokVideoUtil.downloadVideoUsingYtDlp(url, ytDlpPath, effectiveProxy, progress -> {
                         try {
                             emitter.send(SseEmitter.event().data(progress));
                         } catch (IOException e) {
-                            logger.warn("Client disconnected: {}", e.getMessage());
+                            logger.warn("Client disconnected during progress: {}", e.getMessage());
                         }
                     });
                     emitter.send(SseEmitter.event().data("DONE_" + filename));
                     return;
                 } catch (Exception e) {
                     retries--;
-                    logger.warn("Download attempt failed ({} retries left): {}", retries, e.getMessage());
+                    logger.warn("Download attempt failed ({} retries left): {}", retries, e.getMessage(), e);
+                    if (retries == 2 && !effectiveProxy.isEmpty()) {
+                        logger.info("Retrying without proxy due to potential proxy failure");
+                        effectiveProxy = "";
+                    }
                     if (retries == 0) {
                         try {
                             emitter.send(SseEmitter.event().data("FALLBACK_" + url));
@@ -257,7 +261,7 @@ public class TiktokVideoController {
         File file = new File(filename);
         if (!file.exists()) {
             logger.error("File not found: {}", filename);
-            // return ResponseEntity.notFound().body(Map.of("error", ErrorMessage.FILE_NOT_FOUND.getMessage()));
+            return ResponseEntity.notFound().build();  // Optimized: direct notFound without body
         }
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -279,11 +283,15 @@ public class TiktokVideoController {
             return ResponseEntity.badRequest().body(Map.of("error", ErrorMessage.INVALID_URL.getMessage()));
         }
 
-        // Tối ưu: Thử oEmbed trước (nhanh, embed video official - ưu tiên hiển thị video)
+        // Optimized oEmbed: Use exchange with headers to mimic browser, improve success rate for short links
         RestTemplate restTemplate = new RestTemplate();
         String oEmbedUrl = "https://www.tiktok.com/oembed?url=" + tiktokUrl;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", USER_AGENT);
+        headers.set("Referer", "https://www.tiktok.com/");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
         try {
-            ResponseEntity<Map> oEmbedResponse = restTemplate.getForEntity(oEmbedUrl, Map.class);
+            ResponseEntity<Map> oEmbedResponse = restTemplate.exchange(oEmbedUrl, HttpMethod.GET, entity, Map.class);
             if (oEmbedResponse.getStatusCode() == HttpStatus.OK) {
                 Map<String, Object> oEmbedData = oEmbedResponse.getBody();
                 String title = (String) oEmbedData.get("title");
@@ -294,14 +302,14 @@ public class TiktokVideoController {
                         "title", Normalizer.normalize(title != null ? title : "Untitled", Normalizer.Form.NFC),
                         "thumbnail", isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
                         "embedHtml", embedHtml != null ? embedHtml : "",
-                        "videoUrl", "" // Rỗng nếu oEmbed, frontend sẽ dùng embedHtml cho video preview
+                        "videoUrl", ""
                 ));
             }
         } catch (Exception e) {
-            logger.warn("oEmbed failed for URL: {}, error: {}. Fallback to yt-dlp.", tiktokUrl, e.getMessage());
+            logger.warn("oEmbed failed for URL: {}, error: {}. Fallback to yt-dlp.", tiktokUrl, e.getMessage(), e);
         }
 
-        // Fallback yt-dlp nếu oEmbed fail - lấy videoUrl để frontend hiển thị <video>
+        // Fallback yt-dlp
         if (!isYtDlpAvailable()) {
             logger.error("yt-dlp is not available on the system");
             return ResponseEntity.status(500).body(Map.of("error", ErrorMessage.YT_DLP_UNAVAILABLE.getMessage()));
@@ -310,7 +318,7 @@ public class TiktokVideoController {
         int retries = 3;
         String videoTitle = null;
         String thumbnail = null;
-        String videoUrl = null;  // Ưu tiên lấy direct video URL cho preview
+        String videoUrl = null;
         StringBuilder output = new StringBuilder();
         String effectiveProxy = isValidProxy(proxy) ? proxy : "";
 
@@ -318,7 +326,7 @@ public class TiktokVideoController {
             List<String> command = new ArrayList<>();
             command.add(ytDlpPath);
             command.add("--user-agent");
-            command.add("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            command.add(USER_AGENT);  // Reuse constant
             command.add("--add-header");
             command.add("Referer:https://www.tiktok.com/");
             command.add("--add-header");
@@ -335,7 +343,6 @@ public class TiktokVideoController {
                 command.add(effectiveProxy);
             }
 
-            // Thêm print cho title, thumbnail, và url (direct mp4 link cho video preview)
             command.add("--print");
             command.add("title");
             command.add("--print");
@@ -361,7 +368,7 @@ public class TiktokVideoController {
                             logger.info("Found valid thumbnail: {}", thumbnail);
                         } else if (line.startsWith("https://") && line.contains(".mp4") && isValidVideoUrl(line)) {
                             videoUrl = line;
-                            logger.info("Found valid video URL: {}", videoUrl); // Logging video URL như yêu cầu
+                            logger.info("Found valid video URL: {}", videoUrl);
                         } else if (!line.startsWith("[") && !line.isEmpty() && !line.contains("ERROR") && videoTitle == null) {
                             videoTitle = Normalizer.normalize(line, Normalizer.Form.NFC);
                             logger.info("Found video title: {}", videoTitle);
@@ -369,8 +376,8 @@ public class TiktokVideoController {
                     }
                 }
 
-                if (!process.waitFor(30, TimeUnit.SECONDS)) {
-                    process.destroy();
+                if (!process.waitFor(60, TimeUnit.SECONDS)) {  // Increase timeout for larger videos
+                    if (process != null) process.destroy();
                     logger.error("yt-dlp process timed out for URL: {}", tiktokUrl);
                     return ResponseEntity.status(500).body(Map.of("error", ErrorMessage.TIMEOUT.getMessage()));
                 }
@@ -382,7 +389,7 @@ public class TiktokVideoController {
                             "title", videoTitle != null ? videoTitle : "Untitled",
                             "thumbnail", thumbnail != null && isValidThumbnailUrl(thumbnail) ? thumbnail : "https://via.placeholder.com/300x150?text=Thumbnail",
                             "embedHtml", "",
-                            "videoUrl", videoUrl != null && isValidVideoUrl(videoUrl) ? videoUrl : "" // Ưu tiên videoUrl cho frontend
+                            "videoUrl", videoUrl != null && isValidVideoUrl(videoUrl) ? videoUrl : ""
                     ));
                 }
                 logger.warn("yt-dlp failed (retries left: {}), output: {}", retries - 1, output);
@@ -422,7 +429,7 @@ public class TiktokVideoController {
                 }
             } finally {
                 if (process != null) {
-                    process.destroy();
+                    process.destroy();  // Ensure cleanup
                 }
             }
         }
@@ -447,13 +454,13 @@ public class TiktokVideoController {
         } catch (InterruptedException e) {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
-            logger.error("Shutdown interrupted: {}", e.getMessage());
+            logger.error("Shutdown interrupted: {}", e.getMessage(), e);
         }
         File tempDir = new File(System.getProperty("java.io.tmpdir"));
         File[] tempFiles = tempDir.listFiles((dir, name) -> name.endsWith(".mp4"));
         if (tempFiles != null) {
             for (File file : tempFiles) {
-                if (file.lastModified() < System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+                if (file.lastModified() < System.currentTimeMillis() - 12 * 60 * 60 * 1000) {  // Optimized: Cleanup older files more aggressively (12h)
                     if (file.delete()) {
                         logger.info("Deleted old temp file: {}", file.getName());
                     } else {
