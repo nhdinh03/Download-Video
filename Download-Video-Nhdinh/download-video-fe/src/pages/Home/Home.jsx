@@ -69,10 +69,7 @@ const platforms = [
 
 function Home() {
   const [toast, setToast] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => JSON.parse(localStorage.getItem("darkMode")) || false
-  );
+
   const carouselRef = useRef(null);
 
   const handleComingSoon = useCallback((name, e) => {
@@ -91,16 +88,8 @@ function Home() {
     }
   }, [toast]);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
-  useEffect(() => {
-    document.body.classList.toggle("dark-mode", isDarkMode);
-    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
+;
 
   useEffect(() => {
     const carousel = carouselRef.current;
@@ -139,7 +128,7 @@ function Home() {
     };
   }, []);
 
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+
 
   const infinitePlatforms = [...platforms, ...platforms]; // Duplicate x2 đủ cho loop
 

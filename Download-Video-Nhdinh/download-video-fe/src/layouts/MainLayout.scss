@@ -167,7 +167,7 @@
     width: auto;
 
     @media (max-width: 480px) {
-      height: 40px;
+      height: 60px;
     }
   }
 
@@ -341,7 +341,7 @@
   .menu-toggle {
     background: none;
     border: none;
-    font-size: var(--text-2xl);
+    font-size: var(--text-4xl);
     padding: var(--space-xs);
     cursor: pointer;
     color: var(--color-text);

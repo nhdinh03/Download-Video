@@ -742,3 +742,27 @@ body.dark-mode {
     min-width: auto;
   }
 }
+
+@media (max-width: 768px) {
+  .home-features {
+    padding: var(--space-xl) 0; /* Đã có, giữ nguyên */
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr; /* Đã có, giữ nguyên */
+    gap: var(--space-lg); /* Tăng từ mặc định lên 1.5rem để thoáng hơn */
+  }
+  
+  .feature-card {
+    padding: var(--space-lg); /* Tăng padding từ 1rem lên 1.5rem */
+  }
+  
+  .feature-card h3 {
+    font-size: var(--text-2xl); /* Tăng từ 1.25rem lên 1.5rem */
+  }
+  
+  .feature-card p {
+    font-size: var(--text-base); /* Tăng từ 0.875rem lên 1rem */
+    line-height: 1.6; /* Cải thiện khả năng đọc */
+  }
+}

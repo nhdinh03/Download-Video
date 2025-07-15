@@ -131,6 +131,7 @@ function MainLayout({ children }) {
           >
             <img src={img.logo1} alt="Logo" className="logo-image" />
             <div className="logo-text">
+              <br />
               <span className="logo-title">Video Downloader</span>
               <span className="logo-subtitle">Premium</span>
             </div>
@@ -140,11 +141,7 @@ function MainLayout({ children }) {
               onClick={toggleDarkMode}
               className="dark-mode-toggle"
               aria-label="Chuyển đổi chế độ sáng/tối"
-              data-tooltip={
-                isDarkMode
-                  ? "Chuyển sang chế độ sáng"
-                  : "Chuyển sang chế độ tối"
-              }
+      
             >
               {isDarkMode ? <FaSun /> : <FaMoon />}
             </button>
@@ -176,7 +173,7 @@ function MainLayout({ children }) {
                     onClick={() => handleComingSoon(p.name)}
                     style={{ "--platform-color": p.color }}
                     aria-label={`${p.name} (Sắp ra mắt)`}
-                    data-tooltip="Dự kiến ra mắt Q1 2024"
+    
                   >
                     <span className="platform-icon">{p.icon}</span>
                     <span className="platform-name">{p.name}</span>
