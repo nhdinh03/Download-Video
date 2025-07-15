@@ -214,25 +214,43 @@ const TiktokDownloader = () => {
             <button
               className="tiktok-btn tiktok-btn-preview"
               onClick={async () => {
-                try {
-                  const clipboardText = await navigator.clipboard.readText();
-                  const cleanedUrl = clipboardText.trim();
-                  setUrl(cleanedUrl);
-                  handlePreview(cleanedUrl);
-                } catch {
-                  setError(
-                    isMobile ? "Hãy dán thủ công!" : "Không thể đọc clipboard!"
-                  );
+                if (isMobile) {
+                  if (!url || !isValidTiktokUrl(url)) {
+                    setError("Vui lòng nhập đúng link video TikTok!");
+                    return;
+                  }
+                  handleDownload(); // Thực hiện tải về trực tiếp trên mobile/iPad
+                } else {
+                  try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    const cleanedUrl = clipboardText.trim();
+                    setUrl(cleanedUrl);
+                    handlePreview(cleanedUrl);
+                  } catch {
+                    setError("Không thể đọc clipboard!");
+                  }
                 }
               }}
-              disabled={loading.preview}
+              disabled={loading.preview || (isMobile && loading.download)}
             >
-              {loading.preview ? (
+              {isMobile ? (
+                loading.download ? (
+                  <FaSpinner className="tiktok-spin" />
+                ) : (
+                  <FaDownload />
+                )
+              ) : loading.preview ? (
                 <FaSpinner className="tiktok-spin" />
               ) : (
                 <FaRegCopy />
               )}
-              {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
+              {isMobile
+                ? loading.download
+                  ? "Đang tải..."
+                  : "Tải về"
+                : loading.preview
+                ? "Đang xử lý..."
+                : "Dán & Xem trước"}
             </button>
           </div>
         )}
@@ -331,9 +349,10 @@ const TiktokDownloader = () => {
         <br />
         {!thumbnail && (
           <div className="tiktok-guide">
-            <b>Hướng dẫn:</b> Dán link video tiktok vào ô trên{" "}
-            {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
-            → khi video hiện, bấm <b>Lưu về máy</b>.
+            <b>Hướng dẫn:</b>{" "}
+            {isMobile
+              ? "Nhập link video TikTok vào ô trên, sau đó bấm Tải về."
+              : "Dán link video TikTok vào ô trên, sau đó bấm <b>Dán & Xem trước</b> → khi video hiện, bấm <b>Lưu về máy</b>."}
           </div>
         )}
 

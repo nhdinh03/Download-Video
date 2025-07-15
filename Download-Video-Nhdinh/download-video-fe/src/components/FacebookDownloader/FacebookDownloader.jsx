@@ -27,6 +27,7 @@ const FacebookDownloader = () => {
   const [videoTitle, setVideoTitle] = useState("");
   const sseRef = useRef(null);
   const location = useLocation();
+  const inputRef = useRef(null); // Thêm ref cho input
   const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
   const isValidFacebookUrl = useCallback((input) => {
@@ -201,31 +202,49 @@ const FacebookDownloader = () => {
                 spellCheck={false}
                 autoFocus
                 autoComplete="off"
+                ref={inputRef} // Gắn ref vào input
               />
               <button
                 className="fb-btn fb-btn-preview"
                 onClick={async () => {
-                  try {
-                    const clipboardText = await navigator.clipboard.readText();
-                    const cleanedUrl = clipboardText.trim();
-                    setUrl(cleanedUrl);
-                    handlePreview(cleanedUrl);
-                  } catch {
-                    setError(
-                      isMobile
-                        ? "Hãy dán thủ công!"
-                        : "Không thể đọc clipboard!"
-                    );
+                  if (isMobile) {
+                    if (!url || !isValidFacebookUrl(url)) {
+                      setError("Vui lòng nhập đúng link video Facebook!");
+                      return;
+                    }
+                    handleDownload(); // Thực hiện tải về trực tiếp trên mobile/iPad
+                  } else {
+                    try {
+                      const clipboardText =
+                        await navigator.clipboard.readText();
+                      const cleanedUrl = clipboardText.trim();
+                      setUrl(cleanedUrl);
+                      handlePreview(cleanedUrl);
+                    } catch {
+                      setError("Không thể đọc clipboard!");
+                    }
                   }
                 }}
-                disabled={loading.preview}
+                disabled={loading.preview || (isMobile && loading.download)}
               >
-                {loading.preview ? (
+                {isMobile ? (
+                  loading.download ? (
+                    <FaSpinner className="fb-spin" />
+                  ) : (
+                    <FaDownload />
+                  )
+                ) : loading.preview ? (
                   <FaSpinner className="fb-spin" />
                 ) : (
                   <FaRegCopy />
                 )}
-                {loading.preview ? "Đang xử lý..." : "Dán & Xem trước"}
+                {isMobile
+                  ? loading.download
+                    ? "Đang tải..."
+                    : "Tải về"
+                  : loading.preview
+                  ? "Đang xử lý..."
+                  : "Dán & Xem trước"}
               </button>
             </div>
           </>
@@ -294,9 +313,10 @@ const FacebookDownloader = () => {
         <br />
         {!previewUrl && (
           <div className="fb-guide">
-            <b>Hướng dẫn:</b> Dán link video Facebook vào ô trên{" "}
-            {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
-            → khi video hiện, bấm <b>Lưu về máy</b>.
+            <b>Hướng dẫn:</b>{" "}
+            {isMobile
+              ? "Nhập link video TikTok vào ô trên, sau đó bấm Tải về."
+              : "Dán link video Facebook vào ô trên, sau đó bấm <b>Dán & Xem trước</b> → khi video hiện, bấm <b>Lưu về máy</b>."}
           </div>
         )}
         <div className="fb-powered">

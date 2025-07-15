@@ -8,13 +8,10 @@ import {
   FaTwitter,
   FaAt,
   FaDownload,
-  FaMoon,
-  FaSun,
   FaArrowRight,
   FaTimes,
 } from "react-icons/fa";
 import "./Home.scss";
-import img from "../../assets/img";
 
 const platforms = [
   {

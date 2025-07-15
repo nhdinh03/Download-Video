@@ -192,29 +192,47 @@ const InstagramDownloader = () => {
             <button
               className="insta-btn insta-btn-preview"
               onClick={async () => {
-                try {
-                  if (!navigator.clipboard)
-                    throw new Error("Clipboard API không khả dụng.");
-                  const clipboardText = await navigator.clipboard.readText();
-                  const cleanedUrl = clipboardText.trim();
-                  setUrl(cleanedUrl);
-                  handlePreview(cleanedUrl);
-                } catch (err) {
-                  setError(
-                    isMobile
-                      ? "Không thể tự động dán từ clipboard, hãy dán thủ công!"
-                      : "Không thể đọc clipboard. Hãy thử lại hoặc tự dán link!"
-                  );
+                if (isMobile) {
+                  if (!url || !isValidInstagramUrl(url)) {
+                    setError("Chỉ hỗ trợ video dạng Reel trên Instagram!");
+                    return;
+                  }
+                  handleDownload(); // Thực hiện tải về trực tiếp trên mobile/iPad
+                } else {
+                  try {
+                    if (!navigator.clipboard)
+                      throw new Error("Clipboard API không khả dụng.");
+                    const clipboardText = await navigator.clipboard.readText();
+                    const cleanedUrl = clipboardText.trim();
+                    setUrl(cleanedUrl);
+                    handlePreview(cleanedUrl);
+                  } catch (err) {
+                    setError(
+                      "Không thể đọc clipboard. Hãy thử lại hoặc tự dán link!"
+                    );
+                  }
                 }
               }}
-              disabled={loadingPreview}
+              disabled={loadingPreview || (isMobile && loadingDownload)}
             >
-              {loadingPreview ? (
+              {isMobile ? (
+                loadingDownload ? (
+                  <FaSpinner className="insta-spin" />
+                ) : (
+                  <FaDownload />
+                )
+              ) : loadingPreview ? (
                 <FaSpinner className="insta-spin" />
               ) : (
                 <FaRegCopy />
               )}
-              {loadingPreview ? "Đang xử lý..." : "Dán & Xem trước"}
+              {isMobile
+                ? loadingDownload
+                  ? "Đang tải..."
+                  : "Tải về"
+                : loadingPreview
+                ? "Đang xử lý..."
+                : "Dán & Xem trước"}
             </button>
           </div>
         )}
@@ -284,10 +302,11 @@ const InstagramDownloader = () => {
 
         <br />
         {!previewUrl && (
-         <div className="insta-guide">
-            <b>Hướng dẫn:</b> Dán link video instagram vào ô trên{" "}
-            {isMobile && "(nhấn giữ để dán)"}, sau đó bấm <b>Dán & Xem trước</b>{" "}
-            → khi video hiện, bấm <b>Lưu về máy</b>.
+          <div className="insta-guide">
+            <b>Hướng dẫn:</b>{" "}
+            {isMobile
+              ? "Nhập link video TikTok vào ô trên, sau đó bấm Tải về."
+              : "Dán link video Instagram vào ô trên, sau đó bấm <b>Dán & Xem trước</b> → khi video hiện, bấm <b>Lưu về máy</b>."}
           </div>
         )}
 
