@@ -3,6 +3,7 @@ import DownloaderMenu from "../components/DownloaderMenu/DownloaderMenu";
 import "./MainLayout.scss";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import img from "../assets/img";
 
 export default function MainLayout({ children }) {
   const [toast, setToast] = useState("");
@@ -41,12 +42,21 @@ export default function MainLayout({ children }) {
               aria-label="Trang chủ Nhdinh Video Downloader"
             >
               <span className="logo-icon">
-                <FaDownload />
+                <Link
+                  to="/"
+                  className="home-logo"
+                  aria-label="Trang chủ Nhđinh Downloader Pro"
+                >
+                  <span className="logo-icon">
+                    <img
+                      width={150}
+                      src={img.logo1}
+                      alt="Logo"
+                      className="transition-all duration-300"
+                    />
+                  </span>
+                </Link>
               </span>
-              <div className="logo-text">
-                <span className="logo-title">Nhdinh Video</span>
-                <span className="logo-subtitle">Downloader</span>
-              </div>
             </Link>
 
             <div className="header-actions">
@@ -66,11 +76,10 @@ export default function MainLayout({ children }) {
           <nav className="main-nav desktop-nav">
             <DownloaderMenu />
           </nav>
-             <nav className="main-nav mobile-nav">
-          <DownloaderMenu />
-        </nav>
+          <nav className="main-nav mobile-nav">
+            <DownloaderMenu />
+          </nav>
         </div>
-     
       </header>
 
       <main className="main-content">
