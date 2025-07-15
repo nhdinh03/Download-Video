@@ -372,7 +372,7 @@
     top: 0;
     right: 0;
     width: 100%;
-    max-width: 300px;
+    // max-width: 300px;
     height: 100vh;
     background: var(--color-card);
     border: 1px solid var(--color-border);
@@ -399,7 +399,7 @@
       right: var(--space-sm);
       background: none;
       border: none;
-      font-size: var(--text-lg);
+      font-size: var(--text-3xl);
       cursor: pointer;
       color: var(--color-text);
       transition: transform var(--transition-fast);
@@ -431,7 +431,7 @@
 
       .platform-icon {
         color: var(--platform-color);
-        font-size: var(--text-lg);
+        font-size: var(--text-2xl);
       }
 
       &:hover {
