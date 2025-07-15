@@ -301,12 +301,12 @@ const InstagramDownloader = () => {
         )}
 
         <br />
-        {!previewUrl && (
-          <div className="insta-guide">
+         {!previewUrl && (
+          <div className="fb-guide">
             <b>Hướng dẫn:</b>{" "}
             {isMobile
-              ? "Nhập link video TikTok vào ô trên, sau đó bấm Tải về."
-              : "Dán link video Instagram vào ô trên, sau đó bấm <b>Dán & Xem trước</b> → khi video hiện, bấm <b>Lưu về máy</b>."}
+              ? "Nhập link video instagram vào ô trên, sau đó bấm Tải về."
+              : "Dán link video instagram vào ô trên, sau đó bấm Dán & Xem trước → khi video hiện, bấm Lưu về máy."}
           </div>
         )}
 
