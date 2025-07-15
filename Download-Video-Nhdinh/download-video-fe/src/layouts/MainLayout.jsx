@@ -1,11 +1,10 @@
 import { FaDownload, FaMoon, FaSun } from "react-icons/fa";
 import DownloaderMenu from "../components/DownloaderMenu/DownloaderMenu";
 import "./MainLayout.scss";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export default function MainLayout({ children }) {
-  const location = useLocation();
   const [toast, setToast] = useState("");
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaFacebook,
@@ -8,10 +8,9 @@ import {
   FaTwitter,
   FaAt,
   FaDownload,
-  FaMoon,
-  FaSun,
 } from "react-icons/fa";
 import "./Home.scss";
+import { useEffect } from "react";
 
 const platforms = [
   {
@@ -71,6 +70,15 @@ function Home() {
     e.preventDefault();
     setToast(`"${name}" đang được phát triển. Hãy quay lại sau nhé!`);
   };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast("");
+      }, 3000);
+      return () => clearTimeout(timer); // Cleanup để tránh leak
+    }
+  }, [toast]);
   return (
     <div className="home-root">
       <section className="home-hero">
