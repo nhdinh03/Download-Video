@@ -1,5 +1,3 @@
-// Home.scss - Nâng cấp UI chuyên nghiệp, hiện đại, responsive đầy đủ (PC, Laptop, iPad, Mobile)
-
 // Design Tokens - Tối ưu hóa cho accessibility (contrast ratio > 4.5:1), modern aesthetics với soft shadows và subtle animations
 :root {
   // Colors - Palette hiện đại, dễ đọc, hỗ trợ dark mode seamless
@@ -64,7 +62,7 @@
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark-mode {
+body.dark-mode {
   --color-primary: #60a5fa;
   --color-primary-light: #93c5fd;
   --color-primary-dark: #3b82f6;
@@ -156,7 +154,7 @@
     transition: color var(--transition-fast), transform var(--transition-fast);
     padding: var(--space-xxs) var(--space-xs);
     border-radius: var(--radius-full);
-    min-width: 40px; // Touch target size > 40px cho mobile
+    min-width: 44px; // Touch target size > 44px cho mobile
     
     &:hover {
       color: var(--color-primary);
@@ -290,7 +288,7 @@
   }
 }
 
-// Platforms - Horizontal slider với snap, smooth scroll, accessibility (keyboard navigable), thêm auto-scroll subtle cho UX tốt hơn trên desktop
+// Platforms - Infinite carousel với snap, smooth scroll, accessibility (keyboard navigable)
 .home-platforms {
   padding: var(--space-xxl) 0;
   
@@ -307,41 +305,25 @@
     margin-bottom: var(--space-xl);
   }
   
-  .platform-container {
+  .platform-container.infinite-carousel {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: var(--space-lg);
     padding-bottom: var(--space-md);
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) var(--color-bg-alt);
-    -ms-overflow-style: none; // Ẩn scrollbar trên IE
-    scrollbar-gutter: stable; // Giữ không gian scrollbar
+    scrollbar-width: none; // Ẩn scrollbar cho clean look
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar { display: none; }
     
-    &::-webkit-scrollbar {
-      height: 8px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: var(--color-primary);
-      border-radius: var(--radius-full);
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: var(--color-bg-alt);
-    }
-    
-    // Làm cho slider keyboard navigable
-    &:focus-within .platform-card {
-      outline: 2px solid var(--color-primary);
-    }
+    // Initial scroll to middle for loop
+    scroll-behavior: smooth;
   }
   
   .platform-card {
     flex: 0 0 auto;
     width: 300px;
     min-width: 280px;
-    scroll-snap-align: start;
+    scroll-snap-align: center;
     background: var(--color-card);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
@@ -375,7 +357,7 @@
     }
     
     &:hover .platform-icon {
-      transform: scale(1.1);
+      transform: scale(1.1) rotate(5deg);
     }
     
     .platform-info {
@@ -415,6 +397,11 @@
     padding: var(--space-xxs) var(--space-sm);
     border-radius: var(--radius-full);
     box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+    
+    .coming-soon:hover & {
+      transform: scale(1.1);
+    }
   }
 }
 
@@ -462,7 +449,7 @@
     }
     
     &:hover .feature-icon {
-      transform: rotate(10deg);
+      transform: rotate(10deg) scale(1.1);
     }
     
     h3 {
@@ -569,39 +556,34 @@
   }
   
   @keyframes fadeOut {
-    to { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 0; transform: translate(-50%, -20px); }
   }
 }
 
 // Responsive Design - Mobile-first, đầy đủ cho PC (>1280px), Laptop (1024-1280px), iPad (768-1024px landscape/portrait), Mobile (<768px)
-// Tối ưu với grid/flex switching, font scaling, padding adjustments
-@media (min-width: 1280px) {
-  // PC/Laptop large: Full width, center content
-  .platform-container {
-    justify-content: center;
+@media (min-width: 1281px) {
+  // PC large: Grid for platforms
+  .platform-container.infinite-carousel {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    overflow-x: visible;
+    grid-template-columns: repeat(3, 1fr);
+    overflow-x: hidden;
     scroll-snap-type: none;
+    gap: var(--space-lg);
   }
   
   .platform-card {
     width: auto;
     scroll-snap-align: none;
   }
-  
-  .features-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (max-width: 1280px) {
   .header-container, .section-container, .footer-container {
-    padding: 0 var(--space-lg);
+    padding: 0 var(--space-md);
   }
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   // iPad landscape/Laptop small
   .home-hero {
     padding: var(--space-xxl) var(--space-md);
@@ -611,11 +593,11 @@
     }
   }
   
-  .platform-container {
+  .platform-container.infinite-carousel {
     gap: var(--space-md);
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    overflow-x: visible;
+    overflow-x: hidden;
     scroll-snap-type: none;
   }
   
@@ -664,7 +646,7 @@
     }
   }
   
-  .platform-container {
+  .platform-container.infinite-carousel {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -674,7 +656,7 @@
   
   .platform-card {
     width: 250px;
-    min-width: 80%;
+    min-width: 80vw;
     scroll-snap-align: start;
   }
   
@@ -726,13 +708,13 @@
     }
   }
   
-  .platform-container {
+  .platform-container.infinite-carousel {
     gap: var(--space-sm);
   }
   
   .platform-card {
     width: 220px;
-    min-width: 90%;
+    min-width: 90vw;
     padding: var(--space-md);
   }
   
@@ -750,8 +732,10 @@
 
 @media (orientation: portrait) and (min-width: 768px) and (max-width: 1024px) {
   // iPad portrait specific
-  .platform-container {
+  .platform-container.infinite-carousel {
     grid-template-columns: repeat(2, 1fr);
+    display: grid;
+    overflow-x: hidden;
   }
   
   .platform-card {

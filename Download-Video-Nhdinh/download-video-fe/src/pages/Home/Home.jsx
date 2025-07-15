@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   FaFacebook,
@@ -70,46 +70,107 @@ const platforms = [
 function Home() {
   const [toast, setToast] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+  const carouselRef = useRef(null);
 
-  const handleComingSoon = (name, e) => {
+  const handleComingSoon = useCallback((name, e) => {
     e.preventDefault();
     setToast(
       `Tính năng cho "${name}" đang được phát triển. Hãy quay lại sau nhé!`
     );
-  };
+  }, []);
 
   const dismissToast = () => setToast("");
 
   useEffect(() => {
     if (toast) {
-      const timer = setTimeout(() => setToast(""), 3000);
+      const timer = setTimeout(dismissToast, 3000);
       return () => clearTimeout(timer);
     }
   }, [toast]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+
+    const updateCarouselPosition = () => {
+      const scrollWidth = carousel.scrollWidth;
+      const clientWidth = carousel.clientWidth;
+      carousel.scrollLeft = scrollWidth / 2 - clientWidth / 2;
+    };
+
+    const handleScroll = () => {
+      const scrollLeft = carousel.scrollLeft;
+      const scrollWidth = carousel.scrollWidth;
+      const clientWidth = carousel.clientWidth;
+
+      if (scrollLeft <= 0) {
+        carousel.scrollTo({ left: scrollWidth / 2, behavior: "instant" });
+      } else if (scrollLeft + clientWidth >= scrollWidth) {
+        carousel.scrollTo({
+          left: scrollWidth / 2 - clientWidth,
+          behavior: "instant",
+        });
+      }
+    };
+
+    carousel.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", updateCarouselPosition);
+
+    // Khởi tạo vị trí
+    updateCarouselPosition();
+
+    return () => {
+      carousel.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateCarouselPosition);
+    };
+  }, []);
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+
+  const infinitePlatforms = [...platforms, ...platforms]; // Duplicate x2 đủ cho loop
+
+  const renderPlatformCard = (p, index) => (
+    <Link
+      to={p.active ? p.path : "#"}
+      className={`platform-card ${p.active ? "" : "coming-soon"}`}
+      key={`${p.name}-${index}`}
+      onClick={!p.active ? (e) => handleComingSoon(p.name, e) : undefined}
+      aria-label={`${p.name} - ${p.desc}`}
+      tabIndex={0}
+      data-index={index % platforms.length}
+    >
+      <div className="platform-icon" style={{ color: p.color }}>
+        {p.icon}
+      </div>
+      <div className="platform-info">
+        <h3>{p.name}</h3>
+        <p>{p.desc}</p>
+      </div>
+      {!p.active && <div className="platform-badge">Sắp ra mắt</div>}
+    </Link>
+  );
+
   return (
     <div className="home-root">
-      <header className={`home-header ${isScrolled ? "scrolled" : ""}`}>
-        <div className="header-container">
-          <Link
-            to="/"
-            className="home-logo"
-            aria-label="Trang chủ Nhdinh Downloader Pro"
-          ></Link>
-        </div>
-      </header>
+   
 
-      <section className="home-hero">
+      <section className="home-hero" aria-labelledby="hero-title">
         <div className="hero-content">
-          <h1>
+          <h1 id="hero-title">
             Tải Video Từ{" "}
             <span className="primary-gradient">Mọi Nền Tảng Xã Hội</span>
           </h1>
@@ -131,43 +192,23 @@ function Home() {
         </div>
       </section>
 
-      <section className="home-platforms">
+      <section className="home-platforms" aria-labelledby="platforms-title">
         <div className="section-container">
-          <h2>Các nền tảng được hỗ trợ</h2>
+          <h2 id="platforms-title">Các nền tảng được hỗ trợ</h2>
           <div
-            className="platform-container"
+            className="platform-container infinite-carousel"
             role="region"
             aria-label="Danh sách nền tảng hỗ trợ"
+            ref={carouselRef}
           >
-            {platforms.map((p, index) => (
-              <Link
-                to={p.active ? p.path : "#"}
-                className={`platform-card ${p.active ? "" : "coming-soon"}`}
-                key={p.name}
-                onClick={
-                  !p.active ? (e) => handleComingSoon(p.name, e) : undefined
-                }
-                aria-label={`${p.name} - ${p.desc}`}
-                tabIndex={0}
-                data-index={index}
-              >
-                <div className="platform-icon" style={{ color: p.color }}>
-                  {p.icon}
-                </div>
-                <div className="platform-info">
-                  <h3>{p.name}</h3>
-                  <p>{p.desc}</p>
-                </div>
-                {!p.active && <div className="platform-badge">Sắp ra mắt</div>}
-              </Link>
-            ))}
+            {infinitePlatforms.map(renderPlatformCard)}
           </div>
         </div>
       </section>
 
-      <section className="home-features">
+      <section className="home-features" aria-labelledby="features-title">
         <div className="section-container">
-          <h2>Tại sao chọn Nhđinh Downloader Pro?</h2>
+          <h2 id="features-title">Tại sao chọn Nhdinh Downloader Pro?</h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon" aria-hidden="true">
@@ -203,31 +244,7 @@ function Home() {
         </div>
       </section>
 
-      <footer className="home-footer">
-        <div className="footer-container">
-          <div className="footer-top">
-            <span>
-              © {new Date().getFullYear()} Nhđinh Downloader Pro. All rights
-              reserved.
-            </span>
-            <nav className="footer-nav" aria-label="Điều hướng chân trang">
-              <Link to="/terms" aria-label="Điều khoản dịch vụ">
-                Điều khoản
-              </Link>
-              <Link to="/privacy" aria-label="Chính sách bảo mật">
-                Bảo mật
-              </Link>
-              <Link to="/contact" aria-label="Liên hệ hỗ trợ">
-                Liên hệ
-              </Link>
-            </nav>
-          </div>
-          <div className="footer-bottom">
-            <span>Built with ❤️ by Nhđinh Team</span>
-          </div>
-        </div>
-      </footer>
-
+    
       {toast && (
         <div className="toast-coming-soon" role="alert">
           {toast}
